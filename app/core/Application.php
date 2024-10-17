@@ -8,25 +8,32 @@ namespace App\Core;
 class Application
 {
     /**
+     * The current application instance.
+     *
+     * @var Application
+     */
+    public static Application $app;
+
+    /**
      * The current request instance.
      *
      * @var Request
      */
-    protected $request;
+    public Request $request;
 
     /**
      * The current response instance.
      *
      * @var Response
      */
-    protected $response;
+    public Response $response;
 
     /**
      * The router instance.
      *
      * @var Router
      */
-    protected $router;
+    public Router $router;
 
     /**
      * Application constructor.
@@ -35,9 +42,23 @@ class Application
      */
     public function __construct()
     {
+        self::$app = $this;
         $this->request = new Request();
         $this->response = new Response();
         $this->router = new Router();
+
+        $this->registerRoutes();
+    }
+
+    /**
+     * Registers application routes.
+     *
+     * @return void
+     */
+    protected function registerRoutes(): void
+    {
+        // Define default home route
+        $this->router->get("/", "HomeController@index");
     }
 
     /**
