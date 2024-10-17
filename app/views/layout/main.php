@@ -13,7 +13,7 @@
 	<body>
 		<main>
 			<div class="container py-4 py-xl-5">
-				<?= $breadcrumbs ?>
+                <?php include __DIR__ . "/breadcrumbs.php"; ?>
 				<?= $content ?>
 			</div>
 		</main>

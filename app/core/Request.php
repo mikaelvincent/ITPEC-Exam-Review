@@ -94,4 +94,14 @@ class Request
 
         return $body;
     }
+
+    /**
+     * Retrieves the base path of the application.
+     *
+     * @return string
+     */
+    public function getBasePath(): string
+    {
+        return $this->basePath;
+    }
 }
