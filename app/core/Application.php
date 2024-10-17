@@ -81,7 +81,7 @@ class Application
             $breadcrumbs = [
                 [
                     'title' => 'Home',
-                    'path' => '/'
+                    'path' => $this->request->getBasePath() ?: '/'
                 ],
                 [
                     'title' => $errorTitle,

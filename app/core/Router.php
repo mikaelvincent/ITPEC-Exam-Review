@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Core\Application;
+
 /**
  * Router class handles routing of HTTP requests to appropriate controllers and actions.
  */
@@ -51,7 +53,7 @@ class Router
         $this->breadcrumbs = [
             [
                 'title' => 'Home',
-                'path' => '/'
+                'path' => Application::$app->request->getBasePath() ?: '/'
             ]
         ];
 
@@ -133,7 +135,9 @@ class Router
     protected function generateBreadcrumbs(string $path): void
     {
         $segments = explode('/', trim($path, '/'));
-        $currentPath = '';
+        $basePath = Application::$app->request->getBasePath();
+        $currentPath = $basePath;
+
         foreach ($segments as $segment) {
             if ($segment === '') {
                 continue;
