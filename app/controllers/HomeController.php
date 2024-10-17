@@ -16,6 +16,22 @@ class HomeController extends Controller
      */
     public function index(): string
     {
-        return $this->render("home/index");
+        $breadcrumbs = [
+            [
+                'title' => 'Home',
+                'path' => '/'
+            ]
+        ];
+        return $this->render("home/index", ['breadcrumbs' => $this->getBreadcrumbs()]);
+    }
+
+    /**
+     * Retrieves breadcrumb data from the router.
+     *
+     * @return array
+     */
+    protected function getBreadcrumbs(): array
+    {
+        return \App\Core\Application::$app->router->getBreadcrumbs();
     }
 }
