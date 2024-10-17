@@ -8,6 +8,24 @@ namespace App\Core;
 class Request
 {
     /**
+     * The base path of the application.
+     *
+     * @var string
+     */
+    protected $basePath;
+
+    /**
+     * Request constructor.
+     *
+     * Initializes the base path.
+     */
+    public function __construct()
+    {
+        $scriptName = $_SERVER["SCRIPT_NAME"];
+        $this->basePath = rtrim(str_replace("index.php", "", $scriptName), "/");
+    }
+
+    /**
      * Retrieves the HTTP method of the request.
      *
      * @return string
@@ -18,20 +36,21 @@ class Request
     }
 
     /**
-     * Retrieves the URI of the request.
+     * Retrieves the URI of the request, excluding the base path.
      *
      * @return string
      */
     public function getUri(): string
     {
         $uri = $_SERVER["REQUEST_URI"] ?? "/";
-        $position = strpos($uri, "?");
+        $uri = strtok($uri, "?"); // Remove query string
 
-        if ($position === false) {
-            return $uri;
+        // Remove the base path from the URI
+        if (strpos($uri, $this->basePath) === 0) {
+            $uri = substr($uri, strlen($this->basePath));
         }
 
-        return substr($uri, 0, $position);
+        return $uri ?: "/";
     }
 
     /**
