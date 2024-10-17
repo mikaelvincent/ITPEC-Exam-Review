@@ -2,8 +2,6 @@
 
 namespace App\Core;
 
-use App\Controllers\HomeController;
-
 /**
  * Router class handles routing of HTTP requests to appropriate controllers and actions.
  */
@@ -13,6 +11,11 @@ class Router
      * @var array An array of defined routes.
      */
     protected $routes = [];
+
+    /**
+     * @var array An array to store breadcrumb data.
+     */
+    protected $breadcrumbs = [];
 
     /**
      * Adds a new GET route.
@@ -44,6 +47,14 @@ class Router
             throw new \Exception("Route not found", 404);
         }
 
+        // Initialize breadcrumbs with Home
+        $this->breadcrumbs = [
+            [
+                'title' => 'Home',
+                'path' => '/'
+            ]
+        ];
+
         if (is_string($callback)) {
             $parts = explode("@", $callback);
             $controllerName = "App\\Controllers\\" . $parts[0];
@@ -64,6 +75,9 @@ class Router
                     500
                 );
             }
+
+            // Generate breadcrumbs based on the path
+            $this->generateBreadcrumbs($path);
 
             return $controller->$action();
         }
@@ -104,9 +118,41 @@ class Router
             throw new \Exception("Layout not found", 500);
         }
 
-        // Render the layout with the content embedded.
+        // Render the layout with the content embedded and breadcrumbs.
         ob_start();
         include $layoutPath;
         return ob_get_clean();
+    }
+
+    /**
+     * Generates breadcrumb data based on the current path.
+     *
+     * @param string $path
+     * @return void
+     */
+    protected function generateBreadcrumbs(string $path): void
+    {
+        $segments = explode('/', trim($path, '/'));
+        $currentPath = '';
+        foreach ($segments as $segment) {
+            if ($segment === '') {
+                continue;
+            }
+            $currentPath .= '/' . $segment;
+            $this->breadcrumbs[] = [
+                'title' => ucfirst($segment),
+                'path' => $currentPath
+            ];
+        }
+    }
+
+    /**
+     * Retrieves the breadcrumb data.
+     *
+     * @return array
+     */
+    public function getBreadcrumbs(): array
+    {
+        return $this->breadcrumbs;
     }
 }
