@@ -75,6 +75,7 @@ class Application
             $this->response->setStatusCode($e->getCode() ?: 500);
             echo $this->router->renderView("_error", [
                 "message" => $e->getMessage(),
+                "breadcrumbs" => $this->router->getBreadcrumbs()
             ]);
         }
     }
