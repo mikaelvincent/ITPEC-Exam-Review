@@ -73,10 +73,44 @@ class Application
             echo $route;
         } catch (\Exception $e) {
             $this->response->setStatusCode($e->getCode() ?: 500);
+
+            // Determine the error title based on the status code
+            $errorTitle = $this->getErrorTitle($e->getCode());
+
+            // Update breadcrumbs to include Home and the error title
+            $breadcrumbs = [
+                [
+                    'title' => 'Home',
+                    'path' => '/'
+                ],
+                [
+                    'title' => $errorTitle,
+                    'path' => ''
+                ]
+            ];
+
             echo $this->router->renderView("_error", [
                 "message" => $e->getMessage(),
-                "breadcrumbs" => $this->router->getBreadcrumbs()
+                "code" => $e->getCode(),
+                "breadcrumbs" => $breadcrumbs,
+                "errorTitle" => $errorTitle
             ]);
         }
+    }
+
+    /**
+     * Retrieves a human-readable error title based on the status code.
+     *
+     * @param int $code
+     * @return string
+     */
+    protected function getErrorTitle(int $code): string
+    {
+        $titles = [
+            404 => '404 Not Found',
+            500 => '500 Internal Server Error',
+        ];
+
+        return $titles[$code] ?? 'Error';
     }
 }
