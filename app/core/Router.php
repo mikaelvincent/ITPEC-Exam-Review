@@ -92,8 +92,21 @@ class Router
 
         extract($params);
 
+        // Start output buffering for the main content.
         ob_start();
         include $viewPath;
+        $content = ob_get_clean();
+
+        // Determine if a layout is used and render it.
+        $layoutPath = __DIR__ . "/../views/layout/main.php";
+
+        if (!file_exists($layoutPath)) {
+            throw new \Exception("Layout not found", 500);
+        }
+
+        // Render the layout with the content embedded.
+        ob_start();
+        include $layoutPath;
         return ob_get_clean();
     }
 }
