@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Traits\Relationships;
 
 /**
  * Answer model represents the `answer` table in the database.
  */
 class Answer extends Model
 {
+    use Relationships;
+
     /**
      * The table associated with the Answer model.
      *
@@ -23,6 +26,6 @@ class Answer extends Model
      */
     public function getQuestion(): ?Question
     {
-        return Question::find($this->question_id);
+        return $this->getRelatedModel(Question::class, "question_id");
     }
 }

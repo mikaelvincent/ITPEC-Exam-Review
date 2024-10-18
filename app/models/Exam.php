@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Traits\Relationships;
 
 /**
  * Exam model represents the `exam` table in the database.
  */
 class Exam extends Model
 {
+    use Relationships;
+
     /**
      * The table associated with the Exam model.
      *
@@ -23,6 +26,6 @@ class Exam extends Model
      */
     public function getExamSets(): array
     {
-        return ExamSet::findAllByExamId($this->id);
+        return $this->getRelatedModels(ExamSet::class, "exam_id");
     }
 }

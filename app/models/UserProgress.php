@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Traits\Relationships;
 
 /**
  * UserProgress model represents the `userprogress` table in the database.
  */
 class UserProgress extends Model
 {
+    use Relationships;
+
     /**
      * The table associated with the UserProgress model.
      *
@@ -45,7 +48,7 @@ class UserProgress extends Model
      */
     public function getUser(): ?User
     {
-        return User::find($this->user_id);
+        return $this->getRelatedModel(User::class, "user_id");
     }
 
     /**
@@ -55,7 +58,7 @@ class UserProgress extends Model
      */
     public function getQuestion(): ?Question
     {
-        return Question::find($this->question_id);
+        return $this->getRelatedModel(Question::class, "question_id");
     }
 
     /**
@@ -65,6 +68,6 @@ class UserProgress extends Model
      */
     public function getSelectedAnswer(): ?Answer
     {
-        return Answer::find($this->selected_answer_id);
+        return $this->getRelatedModel(Answer::class, "selected_answer_id");
     }
 }

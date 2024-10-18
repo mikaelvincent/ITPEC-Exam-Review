@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Traits\Relationships;
 
 /**
  * User model represents the `user` table in the database.
  */
 class User extends Model
 {
+    use Relationships;
+
     /**
      * The table associated with the User model.
      *
@@ -23,6 +26,6 @@ class User extends Model
      */
     public function getProgress(): array
     {
-        return UserProgress::findAllByUserId($this->id);
+        return $this->getRelatedModels(UserProgress::class, "id");
     }
 }
