@@ -20,28 +20,6 @@ class UserProgress extends Model
     protected string $table = "userprogress";
 
     /**
-     * Finds all UserProgress records by user ID.
-     *
-     * @param int $userId The user ID.
-     * @return array An array of UserProgress instances.
-     */
-    public static function findAllByUserId(int $userId): array
-    {
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM userprogress WHERE user_id = :user_id";
-        $rows = $db->fetchAll($sql, ["user_id" => $userId]);
-
-        $models = [];
-        foreach ($rows as $row) {
-            $model = new self();
-            $model->attributes = $row;
-            $models[] = $model;
-        }
-
-        return $models;
-    }
-
-    /**
      * Gets the user associated with the progress record.
      *
      * @return User|null The associated User instance or null.
