@@ -7,9 +7,17 @@ use PDOException;
 
 /**
  * Database class handles the connection to the database using PDO.
+ * Implements the Singleton pattern to ensure a single connection instance.
  */
 class Database
 {
+    /**
+     * The single instance of the Database.
+     *
+     * @var Database|null
+     */
+    private static ?Database $instance = null;
+
     /**
      * The PDO instance.
      *
@@ -24,7 +32,7 @@ class Database
      *
      * @throws PDOException if the connection fails.
      */
-    public function __construct()
+    private function __construct()
     {
         $host = $_ENV["DB_HOST"] ?? "127.0.0.1";
         $port = $_ENV["DB_PORT"] ?? "3306";
@@ -44,6 +52,19 @@ class Database
             error_log($e->getMessage());
             throw new PDOException("Database connection failed.");
         }
+    }
+
+    /**
+     * Retrieves the single instance of the Database.
+     *
+     * @return Database The Database instance.
+     */
+    public static function getInstance(): Database
+    {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
     }
 
     /**
