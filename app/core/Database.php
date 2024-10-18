@@ -77,9 +77,19 @@ class Database
      */
     public function query(string $sql, array $params = []): \PDOStatement
     {
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (PDOException $e) {
+            // Log detailed error information
+            error_log(
+                "Database Query Error: " . $e->getMessage() . " | SQL: " . $sql
+            );
+            throw new PDOException(
+                "An error occurred while executing the database query."
+            );
+        }
     }
 
     /**
