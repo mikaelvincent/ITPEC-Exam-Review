@@ -22,13 +22,26 @@ class Router
     /**
      * Adds a new GET route.
      *
+     * Supports dynamic routes using placeholders in the format {parameter}.
+     *
      * @param string $path
      * @param callable|string $callback
      * @return void
      */
     public function get(string $path, $callback): void
     {
-        $this->routes["GET"][$path] = $callback;
+        // Convert route path with placeholders to a regex pattern
+        $routePattern = preg_replace(
+            "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
+            '(?P<$1>[a-zA-Z0-9_-]+)',
+            $path
+        );
+        $routePattern = "#^" . $routePattern . '$#';
+
+        $this->routes["GET"][] = [
+            "pattern" => $routePattern,
+            "callback" => $callback,
+        ];
     }
 
     /**
@@ -43,52 +56,60 @@ class Router
         $method = $request->getMethod();
         $path = $request->getUri();
 
-        $callback = $this->routes[$method][$path] ?? false;
-
-        if ($callback === false) {
-            throw new \Exception("Route not found", 404);
+        if (!isset($this->routes[$method])) {
+            throw new \Exception("Page not found", 404);
         }
 
-        // Initialize breadcrumbs with Home
-        $this->breadcrumbs = [
-            [
-                "title" => "Home",
-                "path" => Application::$app->request->getBasePath() ?: "/",
-            ],
-        ];
-
-        if (is_string($callback)) {
-            $parts = explode("@", $callback);
-            $controllerName = "App\\Controllers\\" . $parts[0];
-            $action = $parts[1] ?? "index";
-
-            if (!class_exists($controllerName)) {
-                throw new \Exception(
-                    "Controller $controllerName not found",
-                    500
+        foreach ($this->routes[$method] as $route) {
+            if (preg_match($route["pattern"], $path, $matches)) {
+                $params = array_filter(
+                    $matches,
+                    "is_string",
+                    ARRAY_FILTER_USE_KEY
                 );
+
+                $callback = $route["callback"];
+
+                if (is_string($callback)) {
+                    $parts = explode("@", $callback);
+                    $controllerName = "App\\Controllers\\" . $parts[0];
+                    $action = $parts[1] ?? "index";
+
+                    if (!class_exists($controllerName)) {
+                        throw new \Exception(
+                            "Controller $controllerName not found",
+                            500
+                        );
+                    }
+
+                    $controller = new $controllerName();
+
+                    if (!method_exists($controller, $action)) {
+                        throw new \Exception(
+                            "Action $action not found in controller $controllerName",
+                            500
+                        );
+                    }
+
+                    // Generate breadcrumbs based on the path
+                    $this->generateBreadcrumbs($path);
+
+                    return call_user_func_array(
+                        [$controller, $action],
+                        [$params]
+                    );
+                }
+
+                if (is_callable($callback)) {
+                    return call_user_func_array($callback, [$request, $params]);
+                }
+
+                throw new \Exception("Invalid route callback", 500);
             }
-
-            $controller = new $controllerName();
-
-            if (!method_exists($controller, $action)) {
-                throw new \Exception(
-                    "Action $action not found in controller $controllerName",
-                    500
-                );
-            }
-
-            // Generate breadcrumbs based on the path
-            $this->generateBreadcrumbs($path);
-
-            return $controller->$action();
         }
 
-        if (is_callable($callback)) {
-            return call_user_func($callback, $request);
-        }
-
-        throw new \Exception("Invalid route callback", 500);
+        // No route matched
+        throw new \Exception("Page not found", 404);
     }
 
     /**
@@ -137,14 +158,22 @@ class Router
         $segments = explode("/", trim($path, "/"));
         $basePath = Application::$app->request->getBasePath();
         $currentPath = $basePath;
+        $this->breadcrumbs = [
+            [
+                "title" => "Home",
+                "path" => $basePath ?: "/",
+            ],
+        ];
 
         foreach ($segments as $segment) {
             if ($segment === "") {
                 continue;
             }
             $currentPath .= "/" . $segment;
+            // Replace hyphens with spaces and capitalize words for breadcrumb titles
+            $title = ucwords(str_replace("-", " ", $segment));
             $this->breadcrumbs[] = [
-                "title" => ucfirst($segment),
+                "title" => $title,
                 "path" => $currentPath,
             ];
         }

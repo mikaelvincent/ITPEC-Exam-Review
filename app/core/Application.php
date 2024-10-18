@@ -59,6 +59,15 @@ class Application
     {
         // Define default home route
         $this->router->get("/", "HomeController@index");
+
+        // Define dynamic routes for exams, exam sets, and questions
+        // Example: /FE-Exam/2007-April-AM/Q1
+        $this->router->get("/{exam}", "ExamController@index");
+        $this->router->get("/{exam}/{examset}", "ExamController@examSet");
+        $this->router->get(
+            "/{exam}/{examset}/Q{question_number}",
+            "ExamController@question"
+        );
     }
 
     /**
@@ -83,6 +92,7 @@ class Application
         $titles = [
             404 => "404 Not Found",
             500 => "500 Internal Server Error",
+            401 => "401 Unauthorized",
         ];
 
         return $titles[$code] ?? "Error";
