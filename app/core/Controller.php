@@ -18,4 +18,14 @@ class Controller
     {
         return Application::$app->router->renderView($view, $params);
     }
+
+    /**
+     * Retrieves breadcrumb data from the router.
+     *
+     * @return array
+     */
+    protected function getBreadcrumbs(): array
+    {
+        return Application::$app->router->getBreadcrumbs();
+    }
 }
