@@ -34,6 +34,6 @@ trait Relationships
         string $relatedModel,
         string $foreignKey
     ): array {
-        return $relatedModel::findAllByForeignKey($this->{$foreignKey});
+        return $relatedModel::findAllBy($foreignKey, $this->{$foreignKey});
     }
 }
