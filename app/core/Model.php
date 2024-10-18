@@ -75,6 +75,30 @@ abstract class Model
     }
 
     /**
+     * Finds all records matching a specific column and value.
+     *
+     * @param string $column The column name to filter by.
+     * @param mixed $value The value to match.
+     * @return array An array of model instances.
+     */
+    public static function findAllBy(string $column, $value): array
+    {
+        $instance = new static();
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM {$instance->table} WHERE {$column} = :value";
+        $rows = $db->fetchAll($sql, ["value" => $value]);
+
+        $models = [];
+        foreach ($rows as $row) {
+            $model = new static();
+            $model->attributes = $row;
+            $models[] = $model;
+        }
+
+        return $models;
+    }
+
+    /**
      * Saves the current model instance to the database.
      *
      * @return bool True on success, false otherwise.
@@ -164,5 +188,31 @@ abstract class Model
     public function __set(string $name, $value): void
     {
         $this->attributes[$name] = $value;
+    }
+
+    /**
+     * Defines a relationship to another model.
+     *
+     * @param string $relationshipType The type of relationship (e.g., 'hasOne', 'hasMany').
+     * @param string $relatedModel The related model class name.
+     * @param string $foreignKey The foreign key in the related model.
+     * @return mixed
+     */
+    public function relationship(
+        string $relationshipType,
+        string $relatedModel,
+        string $foreignKey
+    ) {
+        switch ($relationshipType) {
+            case "hasOne":
+                return $relatedModel::find($this->attributes[$foreignKey]);
+            case "hasMany":
+                return $relatedModel::findAllBy(
+                    $foreignKey,
+                    $this->attributes[$foreignKey]
+                );
+            default:
+                return null;
+        }
     }
 }

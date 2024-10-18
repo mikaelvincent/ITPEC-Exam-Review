@@ -16,13 +16,9 @@ class HomeController extends Controller
      */
     public function index(): string
     {
-        $breadcrumbs = [
-            [
-                'title' => 'Home',
-                'path' => '/'
-            ]
-        ];
-        return $this->render("home/index", ['breadcrumbs' => $this->getBreadcrumbs()]);
+        return $this->render("home/index", [
+            "breadcrumbs" => $this->getBreadcrumbs(),
+        ]);
     }
 
     /**

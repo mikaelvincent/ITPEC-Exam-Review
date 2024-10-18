@@ -68,34 +68,8 @@ class Application
      */
     public function run(): void
     {
-        try {
-            $route = $this->router->resolve($this->request);
-            echo $route;
-        } catch (\Exception $e) {
-            $this->response->setStatusCode($e->getCode() ?: 500);
-
-            // Determine the error title based on the status code
-            $errorTitle = $this->getErrorTitle($e->getCode());
-
-            // Update breadcrumbs to include Home and the error title
-            $breadcrumbs = [
-                [
-                    'title' => 'Home',
-                    'path' => $this->request->getBasePath() ?: '/'
-                ],
-                [
-                    'title' => $errorTitle,
-                    'path' => ''
-                ]
-            ];
-
-            echo $this->router->renderView("_error", [
-                "message" => $e->getMessage(),
-                "code" => $e->getCode(),
-                "breadcrumbs" => $breadcrumbs,
-                "errorTitle" => $errorTitle
-            ]);
-        }
+        $route = $this->router->resolve($this->request);
+        echo $route;
     }
 
     /**
@@ -107,10 +81,10 @@ class Application
     protected function getErrorTitle(int $code): string
     {
         $titles = [
-            404 => '404 Not Found',
-            500 => '500 Internal Server Error',
+            404 => "404 Not Found",
+            500 => "500 Internal Server Error",
         ];
 
-        return $titles[$code] ?? 'Error';
+        return $titles[$code] ?? "Error";
     }
 }

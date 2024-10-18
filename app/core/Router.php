@@ -52,9 +52,9 @@ class Router
         // Initialize breadcrumbs with Home
         $this->breadcrumbs = [
             [
-                'title' => 'Home',
-                'path' => Application::$app->request->getBasePath() ?: '/'
-            ]
+                "title" => "Home",
+                "path" => Application::$app->request->getBasePath() ?: "/",
+            ],
         ];
 
         if (is_string($callback)) {
@@ -134,18 +134,18 @@ class Router
      */
     protected function generateBreadcrumbs(string $path): void
     {
-        $segments = explode('/', trim($path, '/'));
+        $segments = explode("/", trim($path, "/"));
         $basePath = Application::$app->request->getBasePath();
         $currentPath = $basePath;
 
         foreach ($segments as $segment) {
-            if ($segment === '') {
+            if ($segment === "") {
                 continue;
             }
-            $currentPath .= '/' . $segment;
+            $currentPath .= "/" . $segment;
             $this->breadcrumbs[] = [
-                'title' => ucfirst($segment),
-                'path' => $currentPath
+                "title" => ucfirst($segment),
+                "path" => $currentPath,
             ];
         }
     }

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Traits\Relationships;
 
 /**
  * Question model represents the `question` table in the database.
  */
 class Question extends Model
 {
+    use Relationships;
+
     /**
      * The table associated with the Question model.
      *
@@ -23,7 +26,7 @@ class Question extends Model
      */
     public function getExamSet(): ?ExamSet
     {
-        return ExamSet::find($this->exam_set_id);
+        return $this->getRelatedModel(ExamSet::class, "exam_set_id");
     }
 
     /**
@@ -33,6 +36,6 @@ class Question extends Model
      */
     public function getAnswers(): array
     {
-        return Answer::findAllByQuestionId($this->id);
+        return $this->getRelatedModels(Answer::class, "id");
     }
 }

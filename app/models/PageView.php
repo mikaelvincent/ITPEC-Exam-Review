@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Traits\Relationships;
 
 /**
  * PageView model represents the `pageview` table in the database.
  */
 class PageView extends Model
 {
+    use Relationships;
+
     /**
      * The table associated with the PageView model.
      *
@@ -23,6 +26,6 @@ class PageView extends Model
      */
     public function getUser(): ?User
     {
-        return User::find($this->user_id);
+        return $this->getRelatedModel(User::class, "user_id");
     }
 }
