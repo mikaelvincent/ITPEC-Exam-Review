@@ -94,6 +94,7 @@ class Router
                     // Generate breadcrumbs based on the path
                     $this->generateBreadcrumbs($path);
 
+                    // Pass params to the controller action
                     return call_user_func_array(
                         [$controller, $action],
                         [$params]
