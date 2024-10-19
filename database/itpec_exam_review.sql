@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 19, 2024 at 05:34 PM
+-- Generation Time: Oct 19, 2024 at 05:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -107,7 +107,6 @@ CREATE TABLE `user` (
   `username` varchar(50) DEFAULT NULL,
   `display_name` varchar(50) DEFAULT NULL,
   `password_hash` char(255) DEFAULT NULL,
-  `is_registered` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
