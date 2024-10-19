@@ -68,6 +68,15 @@ class Application
             "/{exam}/{examset}/Q{question_number}",
             "ExamController@question"
         );
+
+        // Route to reset exam progress
+        $this->router->get("/{exam}/reset", "ExamController@resetExamProgress");
+
+        // Route to reset exam set progress
+        $this->router->get(
+            "/{exam}/{examset}/reset",
+            "ExamController@resetExamSetProgress"
+        );
     }
 
     /**

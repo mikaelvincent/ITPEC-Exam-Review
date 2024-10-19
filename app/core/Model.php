@@ -101,10 +101,20 @@ abstract class Model
     /**
      * Saves the current model instance to the database.
      *
+     * Handles both registered and unregistered users based on the presence of specific attributes.
+     *
      * @return bool True on success, false otherwise.
      */
     public function save(): bool
     {
+        $errors = $this->validate();
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                error_log($error);
+            }
+            return false;
+        }
+
         $db = Database::getInstance();
 
         if (isset($this->attributes[$this->primaryKey])) {
@@ -165,6 +175,18 @@ abstract class Model
             error_log($e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Validates model attributes.
+     *
+     * Override this method in child classes to implement specific validations.
+     *
+     * @return array An array of validation errors, empty if none.
+     */
+    public function validate(): array
+    {
+        return [];
     }
 
     /**
