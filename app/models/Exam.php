@@ -20,6 +20,27 @@ class Exam extends Model
     protected string $table = "exam";
 
     /**
+     * Finds an exam by its name.
+     *
+     * @param string $name The name of the exam.
+     * @return Exam|null The found Exam instance or null.
+     */
+    public static function findByName(string $name): ?Exam
+    {
+        $instance = new static();
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM {$instance->table} WHERE name = :name LIMIT 1";
+        $data = $db->fetch($sql, ["name" => $name]);
+
+        if ($data) {
+            $instance->attributes = $data;
+            return $instance;
+        }
+
+        return null;
+    }
+
+    /**
      * Gets the exam sets associated with the exam.
      *
      * @return array An array of ExamSet instances.
