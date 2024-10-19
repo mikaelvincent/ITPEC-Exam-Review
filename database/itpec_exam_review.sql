@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 19, 2024 at 05:48 PM
+-- Generation Time: Oct 19, 2024 at 05:58 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -120,7 +120,6 @@ CREATE TABLE `user` (
 CREATE TABLE `userprogress` (
   `id` int(10) UNSIGNED NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
-  `question_id` int(10) UNSIGNED NOT NULL,
   `selected_answer_id` int(10) UNSIGNED NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `attempted_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -179,7 +178,6 @@ ALTER TABLE `user`
 ALTER TABLE `userprogress`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
-  ADD KEY `question_id` (`question_id`),
   ADD KEY `selected_answer_id` (`selected_answer_id`);
 
 --
@@ -261,7 +259,6 @@ ALTER TABLE `question`
 --
 ALTER TABLE `userprogress`
   ADD CONSTRAINT `userprogress_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
-  ADD CONSTRAINT `userprogress_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`),
   ADD CONSTRAINT `userprogress_ibfk_3` FOREIGN KEY (`selected_answer_id`) REFERENCES `answer` (`id`);
 COMMIT;
 
