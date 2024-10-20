@@ -104,4 +104,19 @@ class Request
     {
         return $this->basePath;
     }
+
+    /**
+     * Retrieves detailed information about the current request.
+     *
+     * @return string A formatted string containing request details.
+     */
+    public function getRequestDetails(): string
+    {
+        return sprintf(
+            "URI: %s | Method: %s | Query Params: %s",
+            $this->getUri(),
+            $this->getMethod(),
+            json_encode($this->getQueryParams())
+        );
+    }
 }

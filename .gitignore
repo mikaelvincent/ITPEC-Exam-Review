@@ -1,6 +1,8 @@
 # Environment files
 config/.env
 
+logs
+
 # Mapper files
 .map
 .mapfooter

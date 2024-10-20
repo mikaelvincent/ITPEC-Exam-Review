@@ -26,7 +26,39 @@ class ExceptionHandler
      */
     public static function handleException(\Throwable $exception): void
     {
-        error_log($exception->getMessage());
+        // Log exception details using Logger
+        $logger = Logger::getInstance();
+
+        if (Application::$app !== null) {
+            $request = Application::$app->request;
+            $requestDetails = sprintf(
+                "URI: %s | Method: %s | Query Params: %s",
+                $request->getUri(),
+                $request->getMethod(),
+                json_encode($request->getQueryParams())
+            );
+
+            $logMessage = sprintf(
+                "Exception: %s | Code: %s | File: %s:%s | Trace: %s | %s",
+                $exception->getMessage(),
+                $exception->getCode(),
+                $exception->getFile(),
+                $exception->getLine(),
+                $exception->getTraceAsString(),
+                $requestDetails
+            );
+        } else {
+            $logMessage = sprintf(
+                "Exception: %s | Code: %s | File: %s:%s | Trace: %s",
+                $exception->getMessage(),
+                $exception->getCode(),
+                $exception->getFile(),
+                $exception->getLine(),
+                $exception->getTraceAsString()
+            );
+        }
+
+        $logger->error($logMessage);
 
         http_response_code($exception->getCode() ?: 500);
         $errorTitle = self::getErrorTitle($exception->getCode());
@@ -42,12 +74,16 @@ class ExceptionHandler
             ],
         ];
 
-        echo Application::$app->router->renderView("_error", [
-            "message" => $exception->getMessage(),
-            "code" => $exception->getCode(),
-            "breadcrumbs" => $breadcrumbs,
-            "errorTitle" => $errorTitle,
-        ]);
+        echo Application::$app !== null
+            ? Application::$app->router->renderView("_error", [
+                "message" => $exception->getMessage(),
+                "code" => $exception->getCode(),
+                "breadcrumbs" => $breadcrumbs,
+                "errorTitle" => $errorTitle,
+            ])
+            : "<h1>" .
+                htmlspecialchars($errorTitle) .
+                "</h1><p>An unexpected error has occurred.</p>";
     }
 
     /**
@@ -65,8 +101,28 @@ class ExceptionHandler
         string $errfile,
         int $errline
     ): bool {
-        $message = "Error [{$errno}] in {$errfile} at line {$errline}: {$errstr}";
-        error_log($message);
+        // Log error details using Logger
+        $logger = Logger::getInstance();
+
+        if (Application::$app !== null) {
+            $request = Application::$app->request;
+            $requestDetails = sprintf(
+                "URI: %s | Method: %s | Query Params: %s",
+                $request->getUri(),
+                $request->getMethod(),
+                json_encode($request->getQueryParams())
+            );
+
+            $logMessage = sprintf(
+                "Error [{$errno}]: {$errstr} in {$errfile}:{$errline} | {$requestDetails}"
+            );
+        } else {
+            $logMessage = sprintf(
+                "Error [{$errno}]: {$errstr} in {$errfile}:{$errline}"
+            );
+        }
+
+        $logger->error($logMessage);
 
         throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
     }
