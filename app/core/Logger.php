@@ -43,6 +43,11 @@ class Logger
 
         $this->logFile = $logDirectory . "/app.log";
         $this->maxFileSize = 5 * 1024 * 1024; // 5 MB
+
+        // Ensure the log file exists to prevent filesize() errors
+        if (!file_exists($this->logFile)) {
+            file_put_contents($this->logFile, "");
+        }
     }
 
     /**
@@ -89,6 +94,11 @@ class Logger
      */
     private function writeLog(string $level, string $message): void
     {
+        // Ensure the log file exists before attempting to get its size
+        if (!file_exists($this->logFile)) {
+            file_put_contents($this->logFile, "");
+        }
+
         if (filesize($this->logFile) >= $this->maxFileSize) {
             $this->rotateLog();
         }
@@ -108,5 +118,8 @@ class Logger
         $timestamp = date("Ymd_His");
         $rotatedFile = $this->logFile . "." . $timestamp;
         rename($this->logFile, $rotatedFile);
+
+        // Create a new empty log file after rotation
+        file_put_contents($this->logFile, "");
     }
 }
