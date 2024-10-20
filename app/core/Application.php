@@ -10,9 +10,9 @@ class Application
     /**
      * The current application instance.
      *
-     * @var Application
+     * @var Application|null
      */
-    public static Application $app;
+    public static ?Application $app = null;
 
     /**
      * The current request instance.

@@ -28,24 +28,35 @@ class ExceptionHandler
     {
         // Log exception details using Logger
         $logger = Logger::getInstance();
-        $request = Application::$app->request;
 
-        $requestDetails = sprintf(
-            "URI: %s | Method: %s | Query Params: %s",
-            $request->getUri(),
-            $request->getMethod(),
-            json_encode($request->getQueryParams())
-        );
+        if (Application::$app !== null) {
+            $request = Application::$app->request;
+            $requestDetails = sprintf(
+                "URI: %s | Method: %s | Query Params: %s",
+                $request->getUri(),
+                $request->getMethod(),
+                json_encode($request->getQueryParams())
+            );
 
-        $logMessage = sprintf(
-            "Exception: %s | Code: %s | File: %s:%s | Trace: %s | %s",
-            $exception->getMessage(),
-            $exception->getCode(),
-            $exception->getFile(),
-            $exception->getLine(),
-            $exception->getTraceAsString(),
-            $requestDetails
-        );
+            $logMessage = sprintf(
+                "Exception: %s | Code: %s | File: %s:%s | Trace: %s | %s",
+                $exception->getMessage(),
+                $exception->getCode(),
+                $exception->getFile(),
+                $exception->getLine(),
+                $exception->getTraceAsString(),
+                $requestDetails
+            );
+        } else {
+            $logMessage = sprintf(
+                "Exception: %s | Code: %s | File: %s:%s | Trace: %s",
+                $exception->getMessage(),
+                $exception->getCode(),
+                $exception->getFile(),
+                $exception->getLine(),
+                $exception->getTraceAsString()
+            );
+        }
 
         $logger->error($logMessage);
 
@@ -63,12 +74,16 @@ class ExceptionHandler
             ],
         ];
 
-        echo Application::$app->router->renderView("_error", [
-            "message" => $exception->getMessage(),
-            "code" => $exception->getCode(),
-            "breadcrumbs" => $breadcrumbs,
-            "errorTitle" => $errorTitle,
-        ]);
+        echo Application::$app !== null
+            ? Application::$app->router->renderView("_error", [
+                "message" => $exception->getMessage(),
+                "code" => $exception->getCode(),
+                "breadcrumbs" => $breadcrumbs,
+                "errorTitle" => $errorTitle,
+            ])
+            : "<h1>" .
+                htmlspecialchars($errorTitle) .
+                "</h1><p>An unexpected error has occurred.</p>";
     }
 
     /**
@@ -88,18 +103,24 @@ class ExceptionHandler
     ): bool {
         // Log error details using Logger
         $logger = Logger::getInstance();
-        $request = Application::$app->request;
 
-        $requestDetails = sprintf(
-            "URI: %s | Method: %s | Query Params: %s",
-            $request->getUri(),
-            $request->getMethod(),
-            json_encode($request->getQueryParams())
-        );
+        if (Application::$app !== null) {
+            $request = Application::$app->request;
+            $requestDetails = sprintf(
+                "URI: %s | Method: %s | Query Params: %s",
+                $request->getUri(),
+                $request->getMethod(),
+                json_encode($request->getQueryParams())
+            );
 
-        $logMessage = sprintf(
-            "Error [{$errno}]: {$errstr} in {$errfile}:{$errline} | {$requestDetails}"
-        );
+            $logMessage = sprintf(
+                "Error [{$errno}]: {$errstr} in {$errfile}:{$errline} | {$requestDetails}"
+            );
+        } else {
+            $logMessage = sprintf(
+                "Error [{$errno}]: {$errstr} in {$errfile}:{$errline}"
+            );
+        }
 
         $logger->error($logMessage);
 
