@@ -143,9 +143,9 @@ abstract class Model
         try {
             $db->execute($sql, $this->attributes);
             if (!isset($this->attributes[$this->primaryKey])) {
-                $this->attributes[$this->primaryKey] = $db->fetch(
-                    "SELECT LAST_INSERT_ID() as id"
-                )["id"];
+                $this->attributes[
+                    $this->primaryKey
+                ] = (int) $db->getLastInsertId();
             }
             return true;
         } catch (PDOException $e) {
