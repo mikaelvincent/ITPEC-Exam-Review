@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Core;
+
 /**
  * Autoloader class responsible for automatically loading PHP classes.
  */
