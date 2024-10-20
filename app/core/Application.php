@@ -36,9 +36,16 @@ class Application
     public Router $router;
 
     /**
+     * An array of middleware to execute.
+     *
+     * @var array
+     */
+    public array $middleware = [];
+
+    /**
      * Application constructor.
      *
-     * Initializes the request, response, and router components.
+     * Initializes the request, response, router, and middleware components.
      */
     public function __construct()
     {
@@ -61,7 +68,6 @@ class Application
         $this->router->get("/", "HomeController@index");
 
         // Define dynamic routes for exams, exam sets, and questions
-        // Example: /FE-Exam/2007-April-AM/Q1
         $this->router->get("/{exam}", "ExamController@index");
         $this->router->get("/{exam}/{examset}", "ExamController@examSet");
         $this->router->get(
@@ -80,12 +86,29 @@ class Application
     }
 
     /**
+     * Adds middleware to the application.
+     *
+     * @param callable $middleware The middleware to add.
+     * @return void
+     */
+    public function addMiddleware(callable $middleware): void
+    {
+        $this->middleware[] = $middleware;
+    }
+
+    /**
      * Runs the application by handling the incoming request and sending the response.
+     * Executes registered middleware before resolving the route.
      *
      * @return void
      */
     public function run(): void
     {
+        // Execute middleware
+        foreach ($this->middleware as $middleware) {
+            $middleware($this->request, $this->response);
+        }
+
         $route = $this->router->resolve($this->request);
         echo $route;
     }
