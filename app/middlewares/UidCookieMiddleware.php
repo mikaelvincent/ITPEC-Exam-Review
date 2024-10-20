@@ -74,7 +74,7 @@ class UidCookieMiddleware
                 "New UID generated and user created. User ID: {$user->id}."
             );
         } else {
-            // Log failure to create user
+            // Log failure to create user with validation errors
             $logger->error("Failed to create a new user with UID: {$newUid}.");
         }
     }

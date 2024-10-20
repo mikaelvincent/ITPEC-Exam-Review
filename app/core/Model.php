@@ -4,6 +4,7 @@ namespace App\Core;
 
 use App\Core\Database;
 use PDOException;
+use App\Core\Logger;
 
 /**
  * Base Model class providing common database interaction functionalities.
@@ -30,6 +31,13 @@ abstract class Model
      * @var array
      */
     protected array $attributes = [];
+
+    /**
+     * Array to store validation errors.
+     *
+     * @var array
+     */
+    protected array $validationErrors = [];
 
     /**
      * Finds a record by its primary key.
@@ -109,8 +117,9 @@ abstract class Model
     {
         $errors = $this->validate();
         if (!empty($errors)) {
+            $logger = Logger::getInstance();
             foreach ($errors as $error) {
-                error_log($error);
+                $logger->error("Validation Error: " . $error);
             }
             return false;
         }
@@ -149,7 +158,10 @@ abstract class Model
             }
             return true;
         } catch (PDOException $e) {
-            error_log($e->getMessage());
+            $logger = Logger::getInstance();
+            $logger->error(
+                "Database Error on saving model: " . $e->getMessage()
+            );
             return false;
         }
     }
@@ -172,7 +184,10 @@ abstract class Model
             $db->execute($sql, ["id" => $this->attributes[$this->primaryKey]]);
             return true;
         } catch (PDOException $e) {
-            error_log($e->getMessage());
+            $logger = Logger::getInstance();
+            $logger->error(
+                "Database Error on deleting model: " . $e->getMessage()
+            );
             return false;
         }
     }
