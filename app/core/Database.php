@@ -26,6 +26,20 @@ class Database
     private PDO $pdo;
 
     /**
+     * Logger instance for logging database activities.
+     *
+     * @var Logger
+     */
+    private Logger $logger;
+
+    /**
+     * The threshold in seconds to consider a query as slow.
+     *
+     * @var float
+     */
+    private float $slowQueryThreshold;
+
+    /**
      * Database constructor.
      *
      * Initializes the PDO connection using environment variables.
@@ -34,6 +48,9 @@ class Database
      */
     private function __construct()
     {
+        $this->logger = Logger::getInstance();
+        $this->slowQueryThreshold = 1.0; // 1 second
+
         $host = $_ENV["DB_HOST"] ?? "127.0.0.1";
         $port = $_ENV["DB_PORT"] ?? "3306";
         $dbname = $_ENV["DB_NAME"] ?? "itpec_exam_review";
@@ -48,8 +65,10 @@ class Database
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
         } catch (PDOException $e) {
-            // Log the error message
-            error_log($e->getMessage());
+            // Log the error message with connection details
+            $this->logger->error(
+                "Database connection failed: " . $e->getMessage()
+            );
             throw new PDOException("Database connection failed.");
         }
     }
@@ -72,20 +91,43 @@ class Database
      *
      * @param string $sql The SQL statement.
      * @param array $params The parameters for the SQL statement.
-     * @return PDOStatement The resulting PDO statement.
+     * @return \PDOStatement The resulting PDO statement.
      * @throws PDOException if the query fails.
      */
     public function query(string $sql, array $params = []): \PDOStatement
     {
+        $startTime = microtime(true);
         try {
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
+            $executionTime = microtime(true) - $startTime;
+
+            if ($executionTime > $this->slowQueryThreshold) {
+                $this->logger->info(
+                    sprintf(
+                        "Slow Query: %.4f seconds | SQL: %s | Params: %s",
+                        $executionTime,
+                        $sql,
+                        json_encode($params)
+                    )
+                );
+            }
+
             return $stmt;
         } catch (PDOException $e) {
-            // Log detailed error information
-            error_log(
-                "Database Query Error: " . $e->getMessage() . " | SQL: " . $sql
+            // Log detailed error information using Logger
+            $originatingFunction =
+                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1][
+                    "function"
+                ] ?? "unknown";
+            $logMessage = sprintf(
+                "Database Query Error in %s: %s | SQL: %s | Params: %s",
+                $originatingFunction,
+                $e->getMessage(),
+                $sql,
+                json_encode($params)
             );
+            $this->logger->error($logMessage);
             throw new PDOException(
                 "An error occurred while executing the database query."
             );
