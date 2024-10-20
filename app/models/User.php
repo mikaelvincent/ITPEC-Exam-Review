@@ -52,6 +52,27 @@ class User extends Model
     }
 
     /**
+     * Finds a user by UID.
+     *
+     * @param string $uid The UID to search for.
+     * @return User|null The found User instance or null.
+     */
+    public static function findByUid(string $uid): ?User
+    {
+        $instance = new static();
+        $db = \App\Core\Database::getInstance();
+        $sql = "SELECT * FROM {$instance->table} WHERE uid = :uid LIMIT 1";
+        $data = $db->fetch($sql, ["uid" => $uid]);
+
+        if ($data) {
+            $instance->attributes = $data;
+            return $instance;
+        }
+
+        return null;
+    }
+
+    /**
      * Determines if the user is registered.
      *
      * @return bool True if registered, false otherwise.
