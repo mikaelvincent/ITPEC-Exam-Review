@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Validation; // Added to resolve Validation class reference
 
 /**
  * User model represents users in the system, including both registered and unregistered users.
