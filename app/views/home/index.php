@@ -1,17 +1,25 @@
 <?php
-$title = "Home | ITPEC Exam Review";
-?>
-
+$title = "Home | ITPEC Exam Review"; ?>
 <div class="row gy-3 row-cols-1 mb-5">
-    <div class="col">
-        <a class="btn btn-primary btn-lg w-100" role="button" href="#">IP Exam</a>
-    </div>
-    <div class="col">
-        <a class="btn btn-outline-success btn-lg w-100" role="button" href="#">FE Exam</a>
-    </div>
-    <div class="col">
-        <a class="btn btn-primary btn-lg disabled w-100" role="button" href="#">AP Exam</a>
-    </div>
+    <?php foreach ($exams_data as $exam): ?>
+        <div class="col">
+            <?php
+            $buttonClass = "btn-primary";
+            $disabled = "";
+            $href = $exam["name"];
+            if ($exam["status"] === "completed") {
+                $buttonClass = "btn-success";
+                $disabled = "disabled";
+            } elseif ($exam["status"] === "disabled") {
+                $buttonClass = "btn-secondary";
+                $disabled = "disabled";
+            }
+            ?>
+            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="<?= htmlspecialchars($href) ?>" <?= $disabled ?>>
+                <?= htmlspecialchars($exam["name"]) ?>
+            </a>
+        </div>
+    <?php endforeach; ?>
 </div>
 <div class="row gy-3 row-cols-1 mb-3 collapse show" id="expand-button-row">
     <div class="col d-flex justify-content-center">
