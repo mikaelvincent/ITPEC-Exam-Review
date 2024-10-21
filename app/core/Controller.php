@@ -16,7 +16,7 @@ class Controller
      */
     protected function getCurrentUserId(): int
     {
-        return $_SESSION["user_id"] ?? 0;
+        return Session::get("user_id") ?? 0;
     }
 
     /**
