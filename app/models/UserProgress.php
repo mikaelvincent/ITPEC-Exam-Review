@@ -31,7 +31,12 @@ class UserProgress extends Model
     public function resetProgressByExam(int $examId): bool
     {
         $db = Database::getInstance();
-        $sql = "DELETE FROM {$this->table} WHERE user_id = :user_id AND exam_id = :exam_id";
+        $sql = "DELETE up FROM {$this->table} up
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
+                WHERE up.user_id = :user_id AND q.exam_set_id IN (
+                    SELECT id FROM examset WHERE exam_id = :exam_id
+                )";
         return $db->execute($sql, [
             "user_id" => $this->user_id,
             "exam_id" => $examId,
@@ -47,7 +52,12 @@ class UserProgress extends Model
     public function resetProgressByExamSet(int $examSetId): bool
     {
         $db = Database::getInstance();
-        $sql = "DELETE FROM {$this->table} WHERE user_id = :user_id AND exam_set_id = :exam_set_id";
+        $sql = "DELETE FROM {$this->table}
+                WHERE user_id = :user_id AND selected_answer_id IN (
+                    SELECT a.id FROM answer a
+                    JOIN question q ON a.question_id = q.id
+                    WHERE q.exam_set_id = :exam_set_id
+                )";
         return $db->execute($sql, [
             "user_id" => $this->user_id,
             "exam_set_id" => $examSetId,
@@ -67,10 +77,16 @@ class UserProgress extends Model
     ): array {
         $db = Database::getInstance();
         $instance = new static();
-        $sql = "SELECT up.*, e.name AS exam_name
+        $sql = "SELECT e.id AS exam_id, COUNT(up.id) AS completed
                 FROM {$instance->table} up
-                JOIN exam e ON up.exam_id = e.id
-                WHERE up.user_id = :user_id AND e.name = :exam_name";
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
+                JOIN examset es ON q.exam_set_id = es.id
+                JOIN exam e ON es.exam_id = e.id
+                WHERE up.user_id = :user_id
+                  AND e.name = :exam_name
+                  AND up.is_active = 1
+                GROUP BY e.id";
         $results = $db->fetchAll($sql, [
             "user_id" => $userId,
             "exam_name" => $examName,
@@ -94,11 +110,17 @@ class UserProgress extends Model
     ): array {
         $db = Database::getInstance();
         $instance = new static();
-        $sql = "SELECT up.*, es.name AS exam_set_name
+        $sql = "SELECT es.id AS exam_set_id, COUNT(up.id) AS completed
                 FROM {$instance->table} up
-                JOIN examset es ON up.exam_set_id = es.id
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
+                JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
-                WHERE up.user_id = :user_id AND e.name = :exam_name AND es.name = :exam_set_name";
+                WHERE up.user_id = :user_id
+                  AND e.name = :exam_name
+                  AND es.name = :exam_set_name
+                  AND up.is_active = 1
+                GROUP BY es.id";
         $results = $db->fetchAll($sql, [
             "user_id" => $userId,
             "exam_name" => $examName,
@@ -127,14 +149,16 @@ class UserProgress extends Model
         $instance = new static();
         $sql = "SELECT up.*, q.question_number, a.content AS selected_answer
                 FROM {$instance->table} up
-                JOIN question q ON up.question_id = q.id
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
-                JOIN answer a ON up.selected_answer_id = a.id
                 WHERE up.user_id = :user_id 
                   AND e.name = :exam_name 
                   AND es.name = :exam_set_name 
-                  AND q.question_number = :question_number";
+                  AND q.question_number = :question_number
+                  AND up.is_active = 1
+                LIMIT 1";
         $result = $db->fetch($sql, [
             "user_id" => $userId,
             "exam_name" => $examName,
@@ -155,10 +179,15 @@ class UserProgress extends Model
     {
         $db = Database::getInstance();
         $instance = new static();
-        $sql = "SELECT up.exam_id, up.exam_set_id, COUNT(*) as completed
+        $sql = "SELECT e.id AS exam_id, es.id AS exam_set_id, COUNT(up.id) AS completed
                 FROM {$instance->table} up
-                WHERE up.user_id = :user_id AND up.is_completed = 1
-                GROUP BY up.exam_id, up.exam_set_id";
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
+                JOIN examset es ON q.exam_set_id = es.id
+                JOIN exam e ON es.exam_id = e.id
+                WHERE up.user_id = :user_id
+                  AND up.is_active = 1
+                GROUP BY e.id, es.id";
         $results = $db->fetchAll($sql, [
             "user_id" => $userId,
         ]);
@@ -175,7 +204,15 @@ class UserProgress extends Model
     public function hasCompletedExam(int $examId): bool
     {
         $db = Database::getInstance();
-        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE user_id = :user_id AND exam_id = :exam_id AND is_completed = 1";
+        $sql = "SELECT COUNT(*) AS count 
+                FROM {$this->table} up
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
+                WHERE up.user_id = :user_id 
+                  AND q.exam_set_id IN (
+                      SELECT id FROM examset WHERE exam_id = :exam_id
+                  )
+                  AND up.is_active = 1";
         $result = $db->fetch($sql, [
             "user_id" => $this->user_id,
             "exam_id" => $examId,
@@ -193,7 +230,13 @@ class UserProgress extends Model
     public function hasCompletedExamSet(int $examSetId): bool
     {
         $db = Database::getInstance();
-        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE user_id = :user_id AND exam_set_id = :exam_set_id AND is_completed = 1";
+        $sql = "SELECT COUNT(*) AS count 
+                FROM {$this->table} up
+                JOIN answer a ON up.selected_answer_id = a.id
+                JOIN question q ON a.question_id = q.id
+                WHERE up.user_id = :user_id 
+                  AND q.exam_set_id = :exam_set_id
+                  AND up.is_active = 1";
         $result = $db->fetch($sql, [
             "user_id" => $this->user_id,
             "exam_set_id" => $examSetId,
