@@ -6,7 +6,7 @@ use App\Core\Controller;
 use App\Models\UserProgress;
 
 /**
- * Manages requests related to the home page.
+ * HomeController manages requests related to the home page.
  */
 class HomeController extends Controller
 {
@@ -17,7 +17,6 @@ class HomeController extends Controller
      */
     public function index(): string
     {
-        // Retrieve user progress data for the dashboard
         $userProgressData = $this->getUserProgressData();
 
         return $this->render("home/index", [

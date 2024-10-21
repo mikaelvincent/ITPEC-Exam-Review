@@ -5,7 +5,7 @@ namespace App\Core;
 use App\Models\UserProgress;
 
 /**
- * Provides common functionalities for all controllers.
+ * Base Controller class providing common functionalities for all controllers.
  */
 class Controller
 {
@@ -30,7 +30,6 @@ class Controller
      */
     public function render(string $view, array $params = []): string
     {
-        // Automatically include breadcrumbs in the parameters
         $params["breadcrumbs"] = $this->getBreadcrumbs();
         return Application::$app->router->renderView($view, $params);
     }
