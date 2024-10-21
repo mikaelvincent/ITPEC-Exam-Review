@@ -21,7 +21,6 @@ class HomeController extends Controller
         $userProgressData = $this->getUserProgressData();
 
         return $this->render("home/index", [
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress_data" => $userProgressData,
         ]);
     }

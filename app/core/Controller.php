@@ -22,12 +22,16 @@ class Controller
     /**
      * Renders a view with the provided parameters.
      *
+     * Automatically includes breadcrumb navigation data.
+     *
      * @param string $view Path to the view file.
      * @param array $params Parameters to pass to the view.
      * @return string Rendered view content.
      */
     public function render(string $view, array $params = []): string
     {
+        // Automatically include breadcrumbs in the parameters
+        $params["breadcrumbs"] = $this->getBreadcrumbs();
         return Application::$app->router->renderView($view, $params);
     }
 

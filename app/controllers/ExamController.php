@@ -25,7 +25,6 @@ class ExamController extends Controller
 
         return $this->render("exam/index", [
             "exam_name" => $examName,
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress" => $userProgress,
         ]);
     }
@@ -47,7 +46,6 @@ class ExamController extends Controller
         return $this->render("exam/examset", [
             "exam_name" => $examName,
             "examset_name" => $examSetName,
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress" => $userProgress,
         ]);
     }
@@ -75,7 +73,6 @@ class ExamController extends Controller
             "exam_name" => $examName,
             "examset_name" => $examSetName,
             "question_number" => $questionNumber,
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress" => $userProgress,
         ]);
     }
