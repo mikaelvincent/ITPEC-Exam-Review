@@ -15,7 +15,7 @@ $title = "Home | ITPEC Exam Review"; ?>
                 $disabled = "disabled";
             }
             ?>
-            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="/<?= $href ?>" <?= $disabled ?>>
+            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="<?= $href ?>" <?= $disabled ?>>
                 <?= htmlspecialchars($exam["name"]) ?>
             </a>
         </div>
