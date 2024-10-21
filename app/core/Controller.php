@@ -5,27 +5,26 @@ namespace App\Core;
 use App\Models\UserProgress;
 
 /**
- * Base Controller class providing common controller functionalities.
+ * Provides common functionalities for all controllers.
  */
 class Controller
 {
     /**
-     * Retrieves the current user's ID.
+     * Retrieves the current user's ID from the session.
      *
-     * @return int The user ID.
+     * @return int User ID.
      */
     protected function getCurrentUserId(): int
     {
-        // Retrieve the user ID from the session, defaulting to 0 if not set.
         return $_SESSION["user_id"] ?? 0;
     }
 
     /**
-     * Renders a view with the given parameters.
+     * Renders a view with the provided parameters.
      *
-     * @param string $view
-     * @param array $params
-     * @return string
+     * @param string $view Path to the view file.
+     * @param array $params Parameters to pass to the view.
+     * @return string Rendered view content.
      */
     public function render(string $view, array $params = []): string
     {
@@ -33,9 +32,9 @@ class Controller
     }
 
     /**
-     * Retrieves breadcrumb data from the router.
+     * Retrieves breadcrumb navigation data.
      *
-     * @return array
+     * @return array Breadcrumbs for the current page.
      */
     protected function getBreadcrumbs(): array
     {
@@ -43,12 +42,12 @@ class Controller
     }
 
     /**
-     * Retrieves user progress data based on the provided parameters.
+     * Fetches user progress based on the provided parameters.
      *
-     * @param string $examName The name of the exam.
-     * @param string|null $examSetName The name of the exam set.
-     * @param string|null $questionNumber The number of the question.
-     * @return array The user progress data.
+     * @param string $examName Name of the exam.
+     * @param string|null $examSetName Name of the exam set.
+     * @param string|null $questionNumber Number of the question.
+     * @return array User progress information.
      */
     protected function getUserProgress(
         string $examName,

@@ -8,15 +8,14 @@ use App\Core\Database;
 use App\Core\Logger;
 
 /**
- * UserProgress model represents the `userprogress` table in the database.
- * It tracks user progress for specific exams and exam sets.
+ * Tracks user progress for specific exams and exam sets.
  */
 class UserProgress extends Model
 {
     use Relationships;
 
     /**
-     * The table associated with the UserProgress model.
+     * Associated database table name.
      *
      * @var string
      */
@@ -25,8 +24,10 @@ class UserProgress extends Model
     /**
      * Resets progress for a specific exam.
      *
-     * @param int $examId The ID of the exam.
-     * @return bool True on success, false otherwise.
+     * Removes all active progress records related to the specified exam.
+     *
+     * @param int $examId ID of the exam.
+     * @return bool True if records were deleted, false otherwise.
      */
     public function resetProgressByExam(int $examId): bool
     {
@@ -46,8 +47,10 @@ class UserProgress extends Model
     /**
      * Resets progress for a specific exam set.
      *
-     * @param int $examSetId The ID of the exam set.
-     * @return bool True on success, false otherwise.
+     * Removes all active progress records related to the specified exam set.
+     *
+     * @param int $examSetId ID of the exam set.
+     * @return bool True if records were deleted, false otherwise.
      */
     public function resetProgressByExamSet(int $examSetId): bool
     {
@@ -65,11 +68,13 @@ class UserProgress extends Model
     }
 
     /**
-     * Retrieves user progress data for a specific exam.
+     * Retrieves progress data for a specific exam.
      *
-     * @param int $userId The ID of the user.
-     * @param string $examName The name of the exam.
-     * @return array User progress data.
+     * Aggregates the number of completed items for the given exam.
+     *
+     * @param int $userId ID of the user.
+     * @param string $examName Name of the exam.
+     * @return array Progress data.
      */
     public static function getProgressForExam(
         int $userId,
@@ -96,12 +101,14 @@ class UserProgress extends Model
     }
 
     /**
-     * Retrieves user progress data for a specific exam set.
+     * Retrieves progress data for a specific exam set.
      *
-     * @param int $userId The ID of the user.
-     * @param string $examName The name of the exam.
-     * @param string $examSetName The name of the exam set.
-     * @return array User progress data.
+     * Aggregates the number of completed items for the given exam set.
+     *
+     * @param int $userId ID of the user.
+     * @param string $examName Name of the exam.
+     * @param string $examSetName Name of the exam set.
+     * @return array Progress data.
      */
     public static function getProgressForExamSet(
         int $userId,
@@ -131,13 +138,15 @@ class UserProgress extends Model
     }
 
     /**
-     * Retrieves user progress data for a specific question.
+     * Retrieves progress data for a specific question.
      *
-     * @param int $userId The ID of the user.
-     * @param string $examName The name of the exam.
-     * @param string $examSetName The name of the exam set.
-     * @param string $questionNumber The number of the question.
-     * @return array User progress data.
+     * Provides detailed progress information for a particular question within an exam set.
+     *
+     * @param int $userId ID of the user.
+     * @param string $examName Name of the exam.
+     * @param string $examSetName Name of the exam set.
+     * @param string $questionNumber Number of the question.
+     * @return array Progress data.
      */
     public static function getProgressForQuestion(
         int $userId,
@@ -172,8 +181,10 @@ class UserProgress extends Model
     /**
      * Retrieves aggregated user progress data for the dashboard.
      *
-     * @param int $userId The ID of the user.
-     * @return array Aggregated user progress data.
+     * Compiles progress across all exams and exam sets for a user.
+     *
+     * @param int $userId ID of the user.
+     * @return array Aggregated progress data.
      */
     public static function getUserProgressData(int $userId): array
     {
@@ -196,9 +207,9 @@ class UserProgress extends Model
     }
 
     /**
-     * Determines if the user has completed a specific exam.
+     * Checks if the user has completed a specific exam.
      *
-     * @param int $examId The ID of the exam.
+     * @param int $examId ID of the exam.
      * @return bool True if completed, false otherwise.
      */
     public function hasCompletedExam(int $examId): bool
@@ -222,9 +233,9 @@ class UserProgress extends Model
     }
 
     /**
-     * Determines if the user has completed a specific exam set.
+     * Checks if the user has completed a specific exam set.
      *
-     * @param int $examSetId The ID of the exam set.
+     * @param int $examSetId ID of the exam set.
      * @return bool True if completed, false otherwise.
      */
     public function hasCompletedExamSet(int $examSetId): bool
@@ -246,9 +257,9 @@ class UserProgress extends Model
     }
 
     /**
-     * Gets the user associated with the progress record.
+     * Retrieves the user associated with this progress record.
      *
-     * @return User|null The associated User instance or null.
+     * @return User|null Associated User instance or null if not found.
      */
     public function getUser(): ?User
     {
@@ -256,9 +267,9 @@ class UserProgress extends Model
     }
 
     /**
-     * Gets the selected answer associated with the progress record.
+     * Retrieves the selected answer associated with this progress record.
      *
-     * @return Answer|null The associated Answer instance or null.
+     * @return Answer|null Associated Answer instance or null if not found.
      */
     public function getSelectedAnswer(): ?Answer
     {

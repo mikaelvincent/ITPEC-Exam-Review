@@ -7,43 +7,43 @@ use PDOException;
 use App\Core\Logger;
 
 /**
- * Base Model class providing common database interaction functionalities.
+ * Abstract base class for all models, providing common database interactions.
  */
 abstract class Model
 {
     /**
-     * The primary key field name.
+     * Primary key field name.
      *
      * @var string
      */
     protected string $primaryKey = "id";
 
     /**
-     * The table name associated with the model.
+     * Associated database table name.
      *
      * @var string
      */
     protected string $table;
 
     /**
-     * Attributes corresponding to table columns.
+     * Model attributes corresponding to table columns.
      *
      * @var array
      */
     protected array $attributes = [];
 
     /**
-     * Array to store validation errors.
+     * Stores validation errors.
      *
      * @var array
      */
     protected array $validationErrors = [];
 
     /**
-     * Magic getter to access attributes.
+     * Magic getter for model attributes.
      *
-     * @param string $name The attribute name.
-     * @return mixed The attribute value.
+     * @param string $name Attribute name.
+     * @return mixed|null Attribute value or null if not set.
      */
     public function __get(string $name)
     {
@@ -51,10 +51,10 @@ abstract class Model
     }
 
     /**
-     * Magic setter to set attributes.
+     * Magic setter for model attributes.
      *
-     * @param string $name The attribute name.
-     * @param mixed $value The attribute value.
+     * @param string $name Attribute name.
+     * @param mixed $value Attribute value.
      * @return void
      */
     public function __set(string $name, $value): void
@@ -63,9 +63,9 @@ abstract class Model
     }
 
     /**
-     * Magic method to check if an attribute is set.
+     * Checks if an attribute is set.
      *
-     * @param string $name The attribute name.
+     * @param string $name Attribute name.
      * @return bool True if set, false otherwise.
      */
     public function __isset(string $name): bool
@@ -74,10 +74,10 @@ abstract class Model
     }
 
     /**
-     * Finds a record by its primary key.
+     * Retrieves a record by primary key.
      *
-     * @param int $id The primary key value.
-     * @return static|null The found model instance or null.
+     * @param int $id Primary key value.
+     * @return static|null Model instance or null if not found.
      */
     public static function find(int $id): ?self
     {
@@ -95,11 +95,11 @@ abstract class Model
     }
 
     /**
-     * Finds a single record by a specified column and value.
+     * Retrieves a single record by a specific column and value.
      *
-     * @param string $column The column name to filter by.
-     * @param mixed $value The value to match.
-     * @return static|null The found model instance or null.
+     * @param string $column Column name.
+     * @param mixed $value Value to match.
+     * @return static|null Model instance or null if not found.
      */
     public static function findBy(string $column, $value): ?self
     {
@@ -117,9 +117,9 @@ abstract class Model
     }
 
     /**
-     * Retrieves all records from the table.
+     * Retrieves all records from the associated table.
      *
-     * @return array An array of model instances.
+     * @return array Array of model instances.
      */
     public static function findAll(): array
     {
@@ -139,11 +139,11 @@ abstract class Model
     }
 
     /**
-     * Finds all records matching a specific column and value.
+     * Retrieves all records matching a specific column and value.
      *
-     * @param string $column The column name to filter by.
-     * @param mixed $value The value to match.
-     * @return array An array of model instances.
+     * @param string $column Column name.
+     * @param mixed $value Value to match.
+     * @return array Array of model instances.
      */
     public static function findAllBy(string $column, $value): array
     {
@@ -165,7 +165,7 @@ abstract class Model
     /**
      * Saves the current model instance to the database.
      *
-     * Handles both registered and unregistered users based on the presence of specific attributes.
+     * Handles both insertions and updates based on the presence of the primary key.
      *
      * @return bool True on success, false otherwise.
      */
@@ -251,9 +251,9 @@ abstract class Model
     /**
      * Validates model attributes.
      *
-     * Override this method in child classes to implement specific validations.
+     * Should be overridden in child classes to implement specific validations.
      *
-     * @return array An array of validation errors, empty if none.
+     * @return array Validation errors, empty if none.
      */
     public function validate(): array
     {
@@ -263,10 +263,10 @@ abstract class Model
     /**
      * Defines a relationship to another model.
      *
-     * @param string $relationshipType The type of relationship (e.g., 'hasOne', 'hasMany').
-     * @param string $relatedModel The related model class name.
-     * @param string $foreignKey The foreign key in the related model.
-     * @return mixed
+     * @param string $relationshipType Type of relationship ('hasOne', 'hasMany').
+     * @param string $relatedModel Related model class name.
+     * @param string $foreignKey Foreign key attribute.
+     * @return mixed Related model instance(s) or null.
      */
     public function relationship(
         string $relationshipType,

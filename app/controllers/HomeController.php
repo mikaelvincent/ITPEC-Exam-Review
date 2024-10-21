@@ -6,14 +6,14 @@ use App\Core\Controller;
 use App\Models\UserProgress;
 
 /**
- * HomeController handles requests to the home page.
+ * Manages requests related to the home page.
  */
 class HomeController extends Controller
 {
     /**
-     * Renders the home page.
+     * Renders the home page with user progress data.
      *
-     * @return string
+     * @return string Rendered view content.
      */
     public function index(): string
     {
@@ -27,9 +27,9 @@ class HomeController extends Controller
     }
 
     /**
-     * Retrieves user progress data for the dashboard.
+     * Retrieves aggregated user progress data for display.
      *
-     * @return array User progress data.
+     * @return array Aggregated user progress data.
      */
     protected function getUserProgressData(): array
     {

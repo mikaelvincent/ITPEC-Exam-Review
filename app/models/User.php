@@ -6,15 +6,14 @@ use App\Core\Model;
 use App\Core\Traits\Relationships;
 
 /**
- * User model represents the `user` table in the database.
- * It accommodates both registered and unregistered users.
+ * Represents a user in the system, accommodating both registered and unregistered users.
  */
 class User extends Model
 {
     use Relationships;
 
     /**
-     * The table associated with the User model.
+     * Associated database table name.
      *
      * @var string
      */
@@ -23,7 +22,9 @@ class User extends Model
     /**
      * Validates user attributes.
      *
-     * @return array An array of validation errors, empty if none.
+     * Ensures required fields are present and adhere to expected formats.
+     *
+     * @return array Validation errors, empty if none.
      */
     public function validate(): array
     {
@@ -52,10 +53,10 @@ class User extends Model
     }
 
     /**
-     * Finds a user by UID.
+     * Finds a user by their UID.
      *
-     * @param string $uid The UID to search for.
-     * @return User|null The found User instance or null.
+     * @param string $uid UID to search for.
+     * @return User|null User instance or null if not found.
      */
     public static function findByUid(string $uid): ?User
     {
@@ -73,7 +74,7 @@ class User extends Model
     }
 
     /**
-     * Determines if the user is registered.
+     * Determines if the user is registered based on the presence of username and password hash.
      *
      * @return bool True if registered, false otherwise.
      */
@@ -83,9 +84,9 @@ class User extends Model
     }
 
     /**
-     * Gets the user progress records associated with the user.
+     * Retrieves progress records associated with the user.
      *
-     * @return array An array of UserProgress instances.
+     * @return array Array of UserProgress instances.
      */
     public function getProgress(): array
     {

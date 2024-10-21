@@ -6,21 +6,21 @@ use App\Core\Controller;
 use App\Models\UserProgress;
 
 /**
- * ExamController handles requests related to exams, exam sets, and questions.
+ * Handles operations related to exams, exam sets, and questions.
  */
 class ExamController extends Controller
 {
     /**
      * Displays the main page for a specific exam.
      *
-     * @param array $params The route parameters including 'exam'.
-     * @return string The rendered view.
+     * @param array $params Route parameters including 'exam'.
+     * @return string Rendered view content.
      */
     public function index(array $params): string
     {
         $examName = $params["exam"] ?? "Unknown Exam";
 
-        // Retrieve user progress for the exam
+        // Fetch user progress for the specified exam
         $userProgress = $this->getUserProgress($examName);
 
         return $this->render("exam/index", [
@@ -33,15 +33,15 @@ class ExamController extends Controller
     /**
      * Displays the page for a specific exam set.
      *
-     * @param array $params The route parameters including 'exam' and 'examset'.
-     * @return string The rendered view.
+     * @param array $params Route parameters including 'exam' and 'examset'.
+     * @return string Rendered view content.
      */
     public function examSet(array $params): string
     {
         $examName = $params["exam"] ?? "Unknown Exam";
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
 
-        // Retrieve user progress for the exam set
+        // Fetch user progress for the specified exam set
         $userProgress = $this->getUserProgress($examName, $examSetName);
 
         return $this->render("exam/examset", [
@@ -55,8 +55,8 @@ class ExamController extends Controller
     /**
      * Displays the page for a specific question within an exam set.
      *
-     * @param array $params The route parameters including 'exam', 'examset', and 'question_number'.
-     * @return string The rendered view.
+     * @param array $params Route parameters including 'exam', 'examset', and 'question_number'.
+     * @return string Rendered view content.
      */
     public function question(array $params): string
     {
@@ -64,7 +64,7 @@ class ExamController extends Controller
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
         $questionNumber = $params["question_number"] ?? "Unknown Question";
 
-        // Retrieve user progress for the question
+        // Fetch user progress for the specified question
         $userProgress = $this->getUserProgress(
             $examName,
             $examSetName,
@@ -83,8 +83,8 @@ class ExamController extends Controller
     /**
      * Resets user progress for a specific exam.
      *
-     * @param array $params The route parameters including 'exam'.
-     * @return string The response message.
+     * @param array $params Route parameters including 'exam'.
+     * @return string Response message indicating success or failure.
      */
     public function resetExamProgress(array $params): string
     {
@@ -106,8 +106,8 @@ class ExamController extends Controller
     /**
      * Resets user progress for a specific exam set.
      *
-     * @param array $params The route parameters including 'exam' and 'examset'.
-     * @return string The response message.
+     * @param array $params Route parameters including 'exam' and 'examset'.
+     * @return string Response message indicating success or failure.
      */
     public function resetExamSetProgress(array $params): string
     {
@@ -129,13 +129,11 @@ class ExamController extends Controller
     /**
      * Retrieves the exam ID based on the exam name.
      *
-     * @param string $examName
-     * @return int|null The exam ID or null if not found.
+     * @param string $examName Name of the exam.
+     * @return int|null Exam ID or null if not found.
      */
     protected function getExamIdByName(string $examName): ?int
     {
-        // Implement logic to retrieve exam ID from the database
-        // Example:
         $exam = \App\Models\Exam::findByName($examName);
         return $exam->id ?? null;
     }
@@ -143,13 +141,11 @@ class ExamController extends Controller
     /**
      * Retrieves the exam set ID based on the exam set name.
      *
-     * @param string $examSetName
-     * @return int|null The exam set ID or null if not found.
+     * @param string $examSetName Name of the exam set.
+     * @return int|null Exam set ID or null if not found.
      */
     protected function getExamSetIdByName(string $examSetName): ?int
     {
-        // Implement logic to retrieve exam set ID from the database
-        // Example:
         $examSet = \App\Models\ExamSet::findByName($examSetName);
         return $examSet->id ?? null;
     }
