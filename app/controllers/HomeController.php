@@ -27,15 +27,4 @@ class HomeController extends Controller
             "user_progress_data" => $userProgressData,
         ]);
     }
-
-    /**
-     * Retrieves the current user's ID.
-     *
-     * @return int The user ID.
-     */
-    protected function getCurrentUserId(): int
-    {
-        // Placeholder for actual user authentication logic
-        return $_SESSION["user_id"] ?? 0;
-    }
 }

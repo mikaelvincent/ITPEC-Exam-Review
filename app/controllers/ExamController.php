@@ -135,17 +135,6 @@ class ExamController extends Controller
     }
 
     /**
-     * Retrieves the current user's ID.
-     *
-     * @return int The user ID.
-     */
-    protected function getCurrentUserId(): int
-    {
-        // Placeholder for actual user authentication logic
-        return $_SESSION["user_id"] ?? 0;
-    }
-
-    /**
      * Retrieves the exam ID based on the exam name.
      *
      * @param string $examName

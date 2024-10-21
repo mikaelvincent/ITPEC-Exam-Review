@@ -8,6 +8,17 @@ namespace App\Core;
 class Controller
 {
     /**
+     * Retrieves the current user's ID.
+     *
+     * @return int The user ID.
+     */
+    protected function getCurrentUserId(): int
+    {
+        // Retrieve the user ID from the session, defaulting to 0 if not set.
+        return $_SESSION["user_id"] ?? 0;
+    }
+
+    /**
      * Renders a view with the given parameters.
      *
      * @param string $view
