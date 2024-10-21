@@ -66,8 +66,9 @@ class UserProgress extends Model
         string $examName
     ): array {
         $db = Database::getInstance();
+        $instance = new static();
         $sql = "SELECT up.*, e.name AS exam_name
-                FROM {$this->table} up
+                FROM {$instance->table} up
                 JOIN exam e ON up.exam_id = e.id
                 WHERE up.user_id = :user_id AND e.name = :exam_name";
         $results = $db->fetchAll($sql, [
@@ -92,8 +93,9 @@ class UserProgress extends Model
         string $examSetName
     ): array {
         $db = Database::getInstance();
+        $instance = new static();
         $sql = "SELECT up.*, es.name AS exam_set_name
-                FROM {$this->table} up
+                FROM {$instance->table} up
                 JOIN examset es ON up.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
                 WHERE up.user_id = :user_id AND e.name = :exam_name AND es.name = :exam_set_name";
@@ -122,8 +124,9 @@ class UserProgress extends Model
         string $questionNumber
     ): array {
         $db = Database::getInstance();
+        $instance = new static();
         $sql = "SELECT up.*, q.question_number, a.content AS selected_answer
-                FROM {$this->table} up
+                FROM {$instance->table} up
                 JOIN question q ON up.question_id = q.id
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
@@ -151,8 +154,9 @@ class UserProgress extends Model
     public static function getUserProgressData(int $userId): array
     {
         $db = Database::getInstance();
+        $instance = new static();
         $sql = "SELECT up.exam_id, up.exam_set_id, COUNT(*) as completed
-                FROM {$this->table} up
+                FROM {$instance->table} up
                 WHERE up.user_id = :user_id AND up.is_completed = 1
                 GROUP BY up.exam_id, up.exam_set_id";
         $results = $db->fetchAll($sql, [
