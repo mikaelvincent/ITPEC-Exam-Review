@@ -83,6 +83,12 @@ class Application
             "/{exam}/{examset}/reset",
             "ExamController@resetExamSetProgress"
         );
+
+        // Route to generate explanations
+        $this->router->get(
+            "/generate-explanation/{questionId}",
+            "ExamController@generateExplanation"
+        );
     }
 
     /**

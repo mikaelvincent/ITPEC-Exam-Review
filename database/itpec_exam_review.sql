@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 19, 2024 at 05:58 PM
+-- Generation Time: Oct 21, 2024 at 09:42 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -60,6 +60,24 @@ CREATE TABLE `examset` (
   `id` int(10) UNSIGNED NOT NULL,
   `exam_id` int(10) UNSIGNED NOT NULL,
   `name` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `explanation`
+--
+
+CREATE TABLE `explanation` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `question_id` int(10) UNSIGNED NOT NULL,
+  `requester_user_id` int(10) UNSIGNED DEFAULT NULL,
+  `model` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `prompt_tokens` int(10) UNSIGNED NOT NULL,
+  `completion_tokens` int(10) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -150,6 +168,14 @@ ALTER TABLE `examset`
   ADD KEY `exam_id` (`exam_id`);
 
 --
+-- Indexes for table `explanation`
+--
+ALTER TABLE `explanation`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `question_id` (`question_id`),
+  ADD KEY `requester_user_id` (`requester_user_id`);
+
+--
 -- Indexes for table `pageview`
 --
 ALTER TABLE `pageview`
@@ -203,6 +229,12 @@ ALTER TABLE `examset`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `explanation`
+--
+ALTER TABLE `explanation`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `pageview`
 --
 ALTER TABLE `pageview`
@@ -241,6 +273,13 @@ ALTER TABLE `answer`
 --
 ALTER TABLE `examset`
   ADD CONSTRAINT `examset_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exam` (`id`);
+
+--
+-- Constraints for table `explanation`
+--
+ALTER TABLE `explanation`
+  ADD CONSTRAINT `explanation_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`),
+  ADD CONSTRAINT `explanation_ibfk_2` FOREIGN KEY (`requester_user_id`) REFERENCES `user` (`id`);
 
 --
 -- Constraints for table `pageview`
