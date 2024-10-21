@@ -22,49 +22,47 @@ class UserProgress extends Model
     protected string $table = "userprogress";
 
     /**
-     * Resets progress for a specific exam.
+     * Resets progress based on provided criteria.
      *
-     * Removes all active progress records related to the specified exam.
+     * Removes all active progress records related to the specified exam or exam set.
      *
-     * @param int $examId ID of the exam.
+     * @param int|null $examId ID of the exam.
+     * @param int|null $examSetId ID of the exam set.
      * @return bool True if records were deleted, false otherwise.
      */
-    public function resetProgressByExam(int $examId): bool
-    {
+    public function resetProgress(
+        ?int $examId = null,
+        ?int $examSetId = null
+    ): bool {
         $db = Database::getInstance();
-        $sql = "DELETE up FROM {$this->table} up
-                JOIN answer a ON up.selected_answer_id = a.id
-                JOIN question q ON a.question_id = q.id
-                WHERE up.user_id = :user_id AND q.exam_set_id IN (
-                    SELECT id FROM examset WHERE exam_id = :exam_id
-                )";
-        return $db->execute($sql, [
-            "user_id" => $this->user_id,
-            "exam_id" => $examId,
-        ]) > 0;
-    }
 
-    /**
-     * Resets progress for a specific exam set.
-     *
-     * Removes all active progress records related to the specified exam set.
-     *
-     * @param int $examSetId ID of the exam set.
-     * @return bool True if records were deleted, false otherwise.
-     */
-    public function resetProgressByExamSet(int $examSetId): bool
-    {
-        $db = Database::getInstance();
-        $sql = "DELETE FROM {$this->table}
-                WHERE user_id = :user_id AND selected_answer_id IN (
-                    SELECT a.id FROM answer a
+        if ($examId !== null) {
+            $sql = "DELETE up FROM {$this->table} up
+                    JOIN answer a ON up.selected_answer_id = a.id
                     JOIN question q ON a.question_id = q.id
-                    WHERE q.exam_set_id = :exam_set_id
-                )";
-        return $db->execute($sql, [
-            "user_id" => $this->user_id,
-            "exam_set_id" => $examSetId,
-        ]) > 0;
+                    WHERE up.user_id = :user_id AND q.exam_set_id IN (
+                        SELECT id FROM examset WHERE exam_id = :exam_id
+                    )";
+            return $db->execute($sql, [
+                "user_id" => $this->user_id,
+                "exam_id" => $examId,
+            ]) > 0;
+        }
+
+        if ($examSetId !== null) {
+            $sql = "DELETE FROM {$this->table}
+                    WHERE user_id = :user_id AND selected_answer_id IN (
+                        SELECT a.id FROM answer a
+                        JOIN question q ON a.question_id = q.id
+                        WHERE q.exam_set_id = :exam_set_id
+                    )";
+            return $db->execute($sql, [
+                "user_id" => $this->user_id,
+                "exam_set_id" => $examSetId,
+            ]) > 0;
+        }
+
+        return false;
     }
 
     /**

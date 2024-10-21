@@ -96,7 +96,7 @@ class ExamController extends Controller
 
         $userProgress = new UserProgress();
         $userProgress->user_id = $this->getCurrentUserId();
-        $success = $userProgress->resetProgressByExam($examId);
+        $success = $userProgress->resetProgress($examId);
 
         return $success
             ? "Exam progress reset successfully."
@@ -119,7 +119,7 @@ class ExamController extends Controller
 
         $userProgress = new UserProgress();
         $userProgress->user_id = $this->getCurrentUserId();
-        $success = $userProgress->resetProgressByExamSet($examSetId);
+        $success = $userProgress->resetProgress(null, $examSetId);
 
         return $success
             ? "Exam set progress reset successfully."
