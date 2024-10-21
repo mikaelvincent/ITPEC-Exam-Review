@@ -40,25 +40,25 @@ class UserProgress extends Model
             $sql = "DELETE up FROM {$this->table} up
                     JOIN answer a ON up.selected_answer_id = a.id
                     JOIN question q ON a.question_id = q.id
-                    WHERE up.user_id = :user_id AND q.exam_set_id IN (
-                        SELECT id FROM examset WHERE exam_id = :exam_id
+                    WHERE up.user_id = :userId AND q.exam_set_id IN (
+                        SELECT id FROM examset WHERE exam_id = :examId
                     )";
             return $db->execute($sql, [
-                "user_id" => $this->user_id,
-                "exam_id" => $examId,
+                "userId" => $this->userId,
+                "examId" => $examId,
             ]) > 0;
         }
 
         if ($examSetId !== null) {
             $sql = "DELETE FROM {$this->table}
-                    WHERE user_id = :user_id AND selected_answer_id IN (
+                    WHERE user_id = :userId AND selected_answer_id IN (
                         SELECT a.id FROM answer a
                         JOIN question q ON a.question_id = q.id
-                        WHERE q.exam_set_id = :exam_set_id
+                        WHERE q.exam_set_id = :examSetId
                     )";
             return $db->execute($sql, [
-                "user_id" => $this->user_id,
-                "exam_set_id" => $examSetId,
+                "userId" => $this->userId,
+                "examSetId" => $examSetId,
             ]) > 0;
         }
 
@@ -86,13 +86,13 @@ class UserProgress extends Model
                 JOIN question q ON a.question_id = q.id
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
-                WHERE up.user_id = :user_id
-                  AND e.name = :exam_name
+                WHERE up.user_id = :userId
+                  AND e.name = :examName
                   AND up.is_active = 1
                 GROUP BY e.id";
         $results = $db->fetchAll($sql, [
-            "user_id" => $userId,
-            "exam_name" => $examName,
+            "userId" => $userId,
+            "examName" => $examName,
         ]);
 
         return $results;
@@ -121,15 +121,15 @@ class UserProgress extends Model
                 JOIN question q ON a.question_id = q.id
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
-                WHERE up.user_id = :user_id
-                  AND e.name = :exam_name
-                  AND es.name = :exam_set_name
+                WHERE up.user_id = :userId
+                  AND e.name = :examName
+                  AND es.name = :examSetName
                   AND up.is_active = 1
                 GROUP BY es.id";
         $results = $db->fetchAll($sql, [
-            "user_id" => $userId,
-            "exam_name" => $examName,
-            "exam_set_name" => $examSetName,
+            "userId" => $userId,
+            "examName" => $examName,
+            "examSetName" => $examSetName,
         ]);
 
         return $results;
@@ -160,17 +160,17 @@ class UserProgress extends Model
                 JOIN question q ON a.question_id = q.id
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
-                WHERE up.user_id = :user_id 
-                  AND e.name = :exam_name 
-                  AND es.name = :exam_set_name 
-                  AND q.question_number = :question_number
+                WHERE up.user_id = :userId 
+                  AND e.name = :examName 
+                  AND es.name = :examSetName 
+                  AND q.question_number = :questionNumber
                   AND up.is_active = 1
                 LIMIT 1";
         $result = $db->fetch($sql, [
-            "user_id" => $userId,
-            "exam_name" => $examName,
-            "exam_set_name" => $examSetName,
-            "question_number" => $questionNumber,
+            "userId" => $userId,
+            "examName" => $examName,
+            "examSetName" => $examSetName,
+            "questionNumber" => $questionNumber,
         ]);
 
         return $result ?? [];
@@ -194,11 +194,11 @@ class UserProgress extends Model
                 JOIN question q ON a.question_id = q.id
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
-                WHERE up.user_id = :user_id
+                WHERE up.user_id = :userId
                   AND up.is_active = 1
                 GROUP BY e.id, es.id";
         $results = $db->fetchAll($sql, [
-            "user_id" => $userId,
+            "userId" => $userId,
         ]);
 
         return $results;
@@ -217,14 +217,14 @@ class UserProgress extends Model
                 FROM {$this->table} up
                 JOIN answer a ON up.selected_answer_id = a.id
                 JOIN question q ON a.question_id = q.id
-                WHERE up.user_id = :user_id 
+                WHERE up.user_id = :userId 
                   AND q.exam_set_id IN (
-                      SELECT id FROM examset WHERE exam_id = :exam_id
+                      SELECT id FROM examset WHERE exam_id = :examId
                   )
                   AND up.is_active = 1";
         $result = $db->fetch($sql, [
-            "user_id" => $this->user_id,
-            "exam_id" => $examId,
+            "userId" => $this->userId,
+            "examId" => $examId,
         ]);
 
         return $result["count"] > 0;
@@ -243,12 +243,12 @@ class UserProgress extends Model
                 FROM {$this->table} up
                 JOIN answer a ON up.selected_answer_id = a.id
                 JOIN question q ON a.question_id = q.id
-                WHERE up.user_id = :user_id 
-                  AND q.exam_set_id = :exam_set_id
+                WHERE up.user_id = :userId 
+                  AND q.exam_set_id = :examSetId
                   AND up.is_active = 1";
         $result = $db->fetch($sql, [
-            "user_id" => $this->user_id,
-            "exam_set_id" => $examSetId,
+            "userId" => $this->userId,
+            "examSetId" => $examSetId,
         ]);
 
         return $result["count"] > 0;
@@ -261,7 +261,7 @@ class UserProgress extends Model
      */
     public function getUser(): ?User
     {
-        return $this->getRelatedModel(User::class, "user_id");
+        return $this->getRelatedModel(User::class, "userId");
     }
 
     /**
@@ -271,6 +271,6 @@ class UserProgress extends Model
      */
     public function getSelectedAnswer(): ?Answer
     {
-        return $this->getRelatedModel(Answer::class, "selected_answer_id");
+        return $this->getRelatedModel(Answer::class, "selectedAnswerId");
     }
 }
