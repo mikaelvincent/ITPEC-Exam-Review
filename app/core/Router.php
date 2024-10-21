@@ -33,7 +33,7 @@ class Router
         // Convert route path with placeholders to a regex pattern
         $routePattern = preg_replace(
             "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
-            '(?P<$1>[a-zA-Z0-9_-]+)',
+            '(?P<$1>[a-zA-Z0-9\-]+)',
             $path
         );
         $routePattern = "#^" . $routePattern . '$#';

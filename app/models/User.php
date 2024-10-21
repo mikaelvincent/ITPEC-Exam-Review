@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
-use App\Core\Validation; // Added to resolve Validation class reference
+use App\Core\Validation;
 
 /**
  * User model represents users in the system, including both registered and unregistered users.
@@ -36,7 +36,7 @@ class User extends Model
             if (empty($this->uid)) {
                 $errors[] = "UID is required for unregistered users.";
             } elseif (
-                !Validation::validatePattern('/^[a-f0-9-]{36}$/', $this->uid)
+                !Validation::validatePattern('/^[a-f0-9\-]{36}$/', $this->uid)
             ) {
                 $errors[] = "UID format is invalid.";
             }

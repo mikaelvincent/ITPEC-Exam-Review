@@ -27,6 +27,7 @@ class HomeController extends Controller
             if (empty($examSets)) {
                 $examsData[] = [
                     "name" => $exam->name,
+                    "slug" => $exam->slug,
                     "status" => "disabled",
                 ];
                 continue;
@@ -42,6 +43,7 @@ class HomeController extends Controller
 
             $examsData[] = [
                 "name" => $exam->name,
+                "slug" => $exam->slug,
                 "status" => $allSetsCompleted ? "completed" : "available",
             ];
         }

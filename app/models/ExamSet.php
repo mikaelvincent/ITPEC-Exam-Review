@@ -20,14 +20,14 @@ class ExamSet extends Model
     protected string $table = "examset";
 
     /**
-     * Finds an exam set by its name.
+     * Finds an exam set by its slug.
      *
-     * @param string $name The name of the exam set.
+     * @param string $slug The slug of the exam set.
      * @return ExamSet|null The found ExamSet instance or null.
      */
-    public static function findByName(string $name): ?ExamSet
+    public static function findBySlug(string $slug): ?ExamSet
     {
-        return self::findBy("name", $name);
+        return self::findBy("slug", $slug);
     }
 
     /**
