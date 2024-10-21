@@ -105,10 +105,9 @@ class Database
             if ($executionTime > $this->slowQueryThreshold) {
                 $this->logger->info(
                     sprintf(
-                        "Slow Query: %.4f seconds | SQL: %s | Params: %s",
+                        "Slow Query: %.4f seconds | SQL: %s",
                         $executionTime,
-                        $sql,
-                        json_encode($params)
+                        $this->sanitizeSql($sql)
                     )
                 );
             }
@@ -121,17 +120,32 @@ class Database
                     "function"
                 ] ?? "unknown";
             $logMessage = sprintf(
-                "Database Query Error in %s: %s | SQL: %s | Params: %s",
+                "Database Query Error in %s: %s | SQL: %s",
                 $originatingFunction,
                 $e->getMessage(),
-                $sql,
-                json_encode($params)
+                $this->sanitizeSql($sql)
             );
             $this->logger->error($logMessage);
             throw new PDOException(
                 "An error occurred while executing the database query."
             );
         }
+    }
+
+    /**
+     * Sanitizes SQL statements to remove sensitive information.
+     *
+     * @param string $sql The SQL statement.
+     * @return string The sanitized SQL statement.
+     */
+    private function sanitizeSql(string $sql): string
+    {
+        // Remove potential sensitive data such as passwords
+        return preg_replace(
+            "/password_hash\s*=\s*:[a-zA-Z0-9_]+/",
+            "password_hash=***",
+            $sql
+        );
     }
 
     /**

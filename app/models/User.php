@@ -4,10 +4,10 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Validation; // Added to resolve Validation class reference
 
 /**
- * User model represents the `user` table in the database.
- * It accommodates both registered and unregistered users.
+ * User model represents users in the system, including both registered and unregistered users.
  */
 class User extends Model
 {
@@ -23,22 +23,35 @@ class User extends Model
     /**
      * Validates user attributes.
      *
-     * @return array An array of validation errors, empty if none.
+     * Ensures required fields are present and adhere to expected formats.
+     *
+     * @return array Validation errors, empty if none.
      */
     public function validate(): array
     {
         $errors = [];
 
         // Validate UID for unregistered users
-        if (!$this->isRegistered() && empty($this->uid)) {
-            $errors[] = "UID is required for unregistered users.";
+        if (!$this->isRegistered()) {
+            if (empty($this->uid)) {
+                $errors[] = "UID is required for unregistered users.";
+            } elseif (
+                !Validation::validatePattern('/^[a-f0-9-]{36}$/', $this->uid)
+            ) {
+                $errors[] = "UID format is invalid.";
+            }
         }
 
         // If user is registered, validate username and password
         if ($this->isRegistered()) {
             if (empty($this->username)) {
                 $errors[] = "Username is required for registered users.";
-            } elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $this->username)) {
+            } elseif (
+                !Validation::validatePattern(
+                    '/^[a-zA-Z0-9_]{3,20}$/',
+                    $this->username
+                )
+            ) {
                 $errors[] =
                     "Username must be 3-20 characters and contain only letters, numbers, and underscores.";
             }
@@ -52,28 +65,50 @@ class User extends Model
     }
 
     /**
-     * Finds a user by UID.
+     * Hashes the user's password using a secure algorithm.
      *
-     * @param string $uid The UID to search for.
-     * @return User|null The found User instance or null.
+     * @param string $password The plain text password.
+     * @return bool True on success, false otherwise.
      */
-    public static function findByUid(string $uid): ?User
+    public function setPassword(string $password): bool
     {
-        $instance = new static();
-        $db = \App\Core\Database::getInstance();
-        $sql = "SELECT * FROM {$instance->table} WHERE uid = :uid LIMIT 1";
-        $data = $db->fetch($sql, ["uid" => $uid]);
-
-        if ($data) {
-            $instance->attributes = $data;
-            return $instance;
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        if ($hashedPassword === false) {
+            return false;
         }
 
-        return null;
+        $this->password_hash = $hashedPassword;
+        return true;
     }
 
     /**
-     * Determines if the user is registered.
+     * Verifies a plain text password against the stored hash.
+     *
+     * @param string $password The plain text password.
+     * @return bool True if the password matches, false otherwise.
+     */
+    public function verifyPassword(string $password): bool
+    {
+        if (empty($this->password_hash)) {
+            return false;
+        }
+
+        return password_verify($password, $this->password_hash);
+    }
+
+    /**
+     * Finds a user by their UID.
+     *
+     * @param string $uid UID to search for.
+     * @return User|null User instance or null if not found.
+     */
+    public static function findByUid(string $uid): ?User
+    {
+        return self::findBy("uid", $uid);
+    }
+
+    /**
+     * Determines if the user is registered based on the presence of username and password hash.
      *
      * @return bool True if registered, false otherwise.
      */
@@ -83,9 +118,9 @@ class User extends Model
     }
 
     /**
-     * Gets the user progress records associated with the user.
+     * Retrieves progress records associated with the user.
      *
-     * @return array An array of UserProgress instances.
+     * @return array Array of UserProgress instances.
      */
     public function getProgress(): array
     {

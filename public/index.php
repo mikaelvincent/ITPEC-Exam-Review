@@ -1,13 +1,13 @@
 <?php
 
-// Start the session.
-session_start();
-
 // Include the Autoloader class.
 require_once __DIR__ . "/../app/core/Autoloader.php";
 
 // Register the autoloader.
 App\Core\Autoloader::register();
+
+// Start the session using the Session abstraction.
+App\Core\Session::start();
 
 // Load environment variables.
 App\Core\EnvLoader::load();

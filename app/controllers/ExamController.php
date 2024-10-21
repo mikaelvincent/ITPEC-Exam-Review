@@ -4,28 +4,35 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserProgress;
+use App\Core\Validation;
 
 /**
- * ExamController handles requests related to exams, exam sets, and questions.
+ * Handles operations related to exams, exam sets, and questions.
  */
 class ExamController extends Controller
 {
     /**
      * Displays the main page for a specific exam.
      *
-     * @param array $params The route parameters including 'exam'.
-     * @return string The rendered view.
+     * @param array $params Route parameters including 'exam'.
+     * @return string Rendered view content.
      */
     public function index(array $params): string
     {
         $examName = $params["exam"] ?? "Unknown Exam";
 
-        // Retrieve user progress for the exam
-        $userProgress = $this->getUserProgressForExam($examName);
+        // Validate exam name
+        if (
+            !Validation::validatePattern('/^[a-zA-Z0-9\s_-]{3,50}$/', $examName)
+        ) {
+            return "Invalid exam name.";
+        }
+
+        // Fetch user progress for the specified exam
+        $userProgress = $this->getUserProgress($examName);
 
         return $this->render("exam/index", [
             "exam_name" => $examName,
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress" => $userProgress,
         ]);
     }
@@ -33,24 +40,30 @@ class ExamController extends Controller
     /**
      * Displays the page for a specific exam set.
      *
-     * @param array $params The route parameters including 'exam' and 'examset'.
-     * @return string The rendered view.
+     * @param array $params Route parameters including 'exam' and 'examset'.
+     * @return string Rendered view content.
      */
     public function examSet(array $params): string
     {
         $examName = $params["exam"] ?? "Unknown Exam";
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
 
-        // Retrieve user progress for the exam set
-        $userProgress = $this->getUserProgressForExamSet(
-            $examName,
-            $examSetName
-        );
+        // Validate exam set name
+        if (
+            !Validation::validatePattern(
+                '/^[a-zA-Z0-9\s_-]{3,50}$/',
+                $examSetName
+            )
+        ) {
+            return "Invalid exam set name.";
+        }
+
+        // Fetch user progress for the specified exam set
+        $userProgress = $this->getUserProgress($examName, $examSetName);
 
         return $this->render("exam/examset", [
             "exam_name" => $examName,
             "examset_name" => $examSetName,
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress" => $userProgress,
         ]);
     }
@@ -58,8 +71,8 @@ class ExamController extends Controller
     /**
      * Displays the page for a specific question within an exam set.
      *
-     * @param array $params The route parameters including 'exam', 'examset', and 'question_number'.
-     * @return string The rendered view.
+     * @param array $params Route parameters including 'exam', 'examset', and 'question_number'.
+     * @return string Rendered view content.
      */
     public function question(array $params): string
     {
@@ -67,8 +80,13 @@ class ExamController extends Controller
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
         $questionNumber = $params["question_number"] ?? "Unknown Question";
 
-        // Retrieve user progress for the question
-        $userProgress = $this->getUserProgressForQuestion(
+        // Validate question number
+        if (!Validation::validateInteger($questionNumber)) {
+            return "Invalid question number.";
+        }
+
+        // Fetch user progress for the specified question
+        $userProgress = $this->getUserProgress(
             $examName,
             $examSetName,
             $questionNumber
@@ -78,7 +96,6 @@ class ExamController extends Controller
             "exam_name" => $examName,
             "examset_name" => $examSetName,
             "question_number" => $questionNumber,
-            "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress" => $userProgress,
         ]);
     }
@@ -86,12 +103,21 @@ class ExamController extends Controller
     /**
      * Resets user progress for a specific exam.
      *
-     * @param array $params The route parameters including 'exam'.
-     * @return string The response message.
+     * @param array $params Route parameters including 'exam'.
+     * @return string Response message indicating success or failure.
      */
     public function resetExamProgress(array $params): string
     {
-        $examId = $this->getExamIdByName($params["exam"] ?? "");
+        $examName = $params["exam"] ?? "";
+
+        // Validate exam name
+        if (
+            !Validation::validatePattern('/^[a-zA-Z0-9\s_-]{3,50}$/', $examName)
+        ) {
+            return "Invalid exam name.";
+        }
+
+        $examId = $this->getExamIdByName($examName);
 
         if (!$examId) {
             return "Exam not found.";
@@ -99,7 +125,7 @@ class ExamController extends Controller
 
         $userProgress = new UserProgress();
         $userProgress->user_id = $this->getCurrentUserId();
-        $success = $userProgress->resetProgressByExam($examId);
+        $success = $userProgress->resetProgress($examId);
 
         return $success
             ? "Exam progress reset successfully."
@@ -109,12 +135,24 @@ class ExamController extends Controller
     /**
      * Resets user progress for a specific exam set.
      *
-     * @param array $params The route parameters including 'exam' and 'examset'.
-     * @return string The response message.
+     * @param array $params Route parameters including 'exam' and 'examset'.
+     * @return string Response message indicating success or failure.
      */
     public function resetExamSetProgress(array $params): string
     {
-        $examSetId = $this->getExamSetIdByName($params["examset"] ?? "");
+        $examSetName = $params["examset"] ?? "";
+
+        // Validate exam set name
+        if (
+            !Validation::validatePattern(
+                '/^[a-zA-Z0-9\s_-]{3,50}$/',
+                $examSetName
+            )
+        ) {
+            return "Invalid exam set name.";
+        }
+
+        $examSetId = $this->getExamSetIdByName($examSetName);
 
         if (!$examSetId) {
             return "Exam set not found.";
@@ -122,7 +160,7 @@ class ExamController extends Controller
 
         $userProgress = new UserProgress();
         $userProgress->user_id = $this->getCurrentUserId();
-        $success = $userProgress->resetProgressByExamSet($examSetId);
+        $success = $userProgress->resetProgress(null, $examSetId);
 
         return $success
             ? "Exam set progress reset successfully."
@@ -130,26 +168,13 @@ class ExamController extends Controller
     }
 
     /**
-     * Retrieves the current user's ID.
-     *
-     * @return int The user ID.
-     */
-    protected function getCurrentUserId(): int
-    {
-        // Placeholder for actual user authentication logic
-        return $_SESSION["user_id"] ?? 0;
-    }
-
-    /**
      * Retrieves the exam ID based on the exam name.
      *
-     * @param string $examName
-     * @return int|null The exam ID or null if not found.
+     * @param string $examName Name of the exam.
+     * @return int|null Exam ID or null if not found.
      */
     protected function getExamIdByName(string $examName): ?int
     {
-        // Implement logic to retrieve exam ID from the database
-        // Example:
         $exam = \App\Models\Exam::findByName($examName);
         return $exam->id ?? null;
     }
@@ -157,58 +182,12 @@ class ExamController extends Controller
     /**
      * Retrieves the exam set ID based on the exam set name.
      *
-     * @param string $examSetName
-     * @return int|null The exam set ID or null if not found.
+     * @param string $examSetName Name of the exam set.
+     * @return int|null Exam set ID or null if not found.
      */
     protected function getExamSetIdByName(string $examSetName): ?int
     {
-        // Implement logic to retrieve exam set ID from the database
-        // Example:
         $examSet = \App\Models\ExamSet::findByName($examSetName);
         return $examSet->id ?? null;
-    }
-
-    /**
-     * Retrieves user progress for a specific exam.
-     *
-     * @param string $examName
-     * @return array User progress data.
-     */
-    protected function getUserProgressForExam(string $examName): array
-    {
-        // Implement logic to retrieve and structure user progress data
-        return [];
-    }
-
-    /**
-     * Retrieves user progress for a specific exam set.
-     *
-     * @param string $examName
-     * @param string $examSetName
-     * @return array User progress data.
-     */
-    protected function getUserProgressForExamSet(
-        string $examName,
-        string $examSetName
-    ): array {
-        // Implement logic to retrieve and structure user progress data
-        return [];
-    }
-
-    /**
-     * Retrieves user progress for a specific question.
-     *
-     * @param string $examName
-     * @param string $examSetName
-     * @param string $questionNumber
-     * @return array User progress data.
-     */
-    protected function getUserProgressForQuestion(
-        string $examName,
-        string $examSetName,
-        string $questionNumber
-    ): array {
-        // Implement logic to retrieve and structure user progress data
-        return [];
     }
 }
