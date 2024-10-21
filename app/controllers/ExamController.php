@@ -21,10 +21,7 @@ class ExamController extends Controller
         $examName = $params["exam"] ?? "Unknown Exam";
 
         // Retrieve user progress for the exam
-        $userProgress = UserProgress::getProgressForExam(
-            $this->getCurrentUserId(),
-            $examName
-        );
+        $userProgress = $this->getUserProgress($examName);
 
         return $this->render("exam/index", [
             "exam_name" => $examName,
@@ -45,11 +42,7 @@ class ExamController extends Controller
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
 
         // Retrieve user progress for the exam set
-        $userProgress = UserProgress::getProgressForExamSet(
-            $this->getCurrentUserId(),
-            $examName,
-            $examSetName
-        );
+        $userProgress = $this->getUserProgress($examName, $examSetName);
 
         return $this->render("exam/examset", [
             "exam_name" => $examName,
@@ -72,8 +65,7 @@ class ExamController extends Controller
         $questionNumber = $params["question_number"] ?? "Unknown Question";
 
         // Retrieve user progress for the question
-        $userProgress = UserProgress::getProgressForQuestion(
-            $this->getCurrentUserId(),
+        $userProgress = $this->getUserProgress(
             $examName,
             $examSetName,
             $questionNumber

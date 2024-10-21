@@ -18,13 +18,22 @@ class HomeController extends Controller
     public function index(): string
     {
         // Retrieve user progress data for the dashboard
-        $userProgressData = UserProgress::getUserProgressData(
-            $this->getCurrentUserId()
-        );
+        $userProgressData = $this->getUserProgressData();
 
         return $this->render("home/index", [
             "breadcrumbs" => $this->getBreadcrumbs(),
             "user_progress_data" => $userProgressData,
         ]);
+    }
+
+    /**
+     * Retrieves user progress data for the dashboard.
+     *
+     * @return array User progress data.
+     */
+    protected function getUserProgressData(): array
+    {
+        $userId = $this->getCurrentUserId();
+        return UserProgress::getUserProgressData($userId);
     }
 }
