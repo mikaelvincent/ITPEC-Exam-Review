@@ -6,7 +6,7 @@ $title = "Home | ITPEC Exam Review"; ?>
             <?php
             $buttonClass = "btn-primary";
             $disabled = "";
-            $href = $exam["name"];
+            $href = htmlspecialchars($exam["slug"]);
             if ($exam["status"] === "completed") {
                 $buttonClass = "btn-success";
                 $disabled = "disabled";
@@ -15,7 +15,7 @@ $title = "Home | ITPEC Exam Review"; ?>
                 $disabled = "disabled";
             }
             ?>
-            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="<?= htmlspecialchars($href) ?>" <?= $disabled ?>>
+            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="/<?= $href ?>" <?= $disabled ?>>
                 <?= htmlspecialchars($exam["name"]) ?>
             </a>
         </div>
@@ -33,7 +33,7 @@ $title = "Home | ITPEC Exam Review"; ?>
 <div id="collapse-menu" class="collapse">
     <div class="row gy-3 row-cols-1 mb-5">
         <div class="col">
-            <a class="btn btn-outline-info btn-lg w-100" role="button" href="#">Contributors</a>
+            <a class="btn btn-outline-info btn-lg w-100" role="button" href="/contributors">Contributors</a>
         </div>
         <div class="col">
             <button class="btn btn-outline-info btn-lg w-100" type="button" data-bs-target="#website-stats" data-bs-toggle="modal">Website Stats</button>

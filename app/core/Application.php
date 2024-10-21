@@ -67,21 +67,21 @@ class Application
         // Static route for the contributors page
         $this->router->get("/contributors", "ContributorsController@index");
 
-        // Define dynamic routes for exams, exam sets, and questions
+        // Define dynamic routes for exams, exam sets, and questions using slugs
         $this->router->get("/", "HomeController@index");
-        $this->router->get("/{exam}", "ExamController@index");
-        $this->router->get("/{exam}/{examset}", "ExamController@examSet");
+        $this->router->get("/{slug}", "ExamController@index");
+        $this->router->get("/{slug}/{examset_slug}", "ExamController@examSet");
         $this->router->get(
-            "/{exam}/{examset}/Q{question_number}",
+            "/{slug}/{examset_slug}/Q{question_number}",
             "ExamController@question"
         );
 
-        // Route to reset exam progress
-        $this->router->get("/{exam}/reset", "ExamController@resetExamProgress");
+        // Route to reset exam progress using slug
+        $this->router->get("/{slug}/reset", "ExamController@resetExamProgress");
 
-        // Route to reset exam set progress
+        // Route to reset exam set progress using slug
         $this->router->get(
-            "/{exam}/{examset}/reset",
+            "/{slug}/{examset_slug}/reset",
             "ExamController@resetExamSetProgress"
         );
 

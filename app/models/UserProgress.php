@@ -71,12 +71,12 @@ class UserProgress extends Model
      * Aggregates the number of completed items for the given exam.
      *
      * @param int $userId ID of the user.
-     * @param string $examName Name of the exam.
+     * @param string $examSlug Slug of the exam.
      * @return array Progress data.
      */
-    public static function getProgressForExam(
+    public static function getProgressForExamBySlug(
         int $userId,
-        string $examName
+        string $examSlug
     ): array {
         $db = Database::getInstance();
         $instance = new static();
@@ -87,12 +87,12 @@ class UserProgress extends Model
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
                 WHERE up.user_id = :userId
-                  AND e.name = :examName
+                  AND e.slug = :examSlug
                   AND up.is_active = 1
                 GROUP BY e.id";
         $results = $db->fetchAll($sql, [
             "userId" => $userId,
-            "examName" => $examName,
+            "examSlug" => $examSlug,
         ]);
 
         return $results;
@@ -104,14 +104,14 @@ class UserProgress extends Model
      * Aggregates the number of completed items for the given exam set.
      *
      * @param int $userId ID of the user.
-     * @param string $examName Name of the exam.
-     * @param string $examSetName Name of the exam set.
+     * @param string $examSlug Slug of the exam.
+     * @param string $examSetSlug Slug of the exam set.
      * @return array Progress data.
      */
-    public static function getProgressForExamSet(
+    public static function getProgressForExamSetBySlug(
         int $userId,
-        string $examName,
-        string $examSetName
+        string $examSlug,
+        string $examSetSlug
     ): array {
         $db = Database::getInstance();
         $instance = new static();
@@ -122,14 +122,14 @@ class UserProgress extends Model
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
                 WHERE up.user_id = :userId
-                  AND e.name = :examName
-                  AND es.name = :examSetName
+                  AND e.slug = :examSlug
+                  AND es.slug = :examSetSlug
                   AND up.is_active = 1
                 GROUP BY es.id";
         $results = $db->fetchAll($sql, [
             "userId" => $userId,
-            "examName" => $examName,
-            "examSetName" => $examSetName,
+            "examSlug" => $examSlug,
+            "examSetSlug" => $examSetSlug,
         ]);
 
         return $results;
@@ -141,15 +141,15 @@ class UserProgress extends Model
      * Provides detailed progress information for a particular question within an exam set.
      *
      * @param int $userId ID of the user.
-     * @param string $examName Name of the exam.
-     * @param string $examSetName Name of the exam set.
+     * @param string $examSlug Slug of the exam.
+     * @param string $examSetSlug Slug of the exam set.
      * @param string $questionNumber Number of the question.
      * @return array Progress data.
      */
     public static function getProgressForQuestion(
         int $userId,
-        string $examName,
-        string $examSetName,
+        string $examSlug,
+        string $examSetSlug,
         string $questionNumber
     ): array {
         $db = Database::getInstance();
@@ -161,15 +161,15 @@ class UserProgress extends Model
                 JOIN examset es ON q.exam_set_id = es.id
                 JOIN exam e ON es.exam_id = e.id
                 WHERE up.user_id = :userId 
-                  AND e.name = :examName 
-                  AND es.name = :examSetName 
+                  AND e.slug = :examSlug 
+                  AND es.slug = :examSetSlug 
                   AND q.question_number = :questionNumber
                   AND up.is_active = 1
                 LIMIT 1";
         $result = $db->fetch($sql, [
             "userId" => $userId,
-            "examName" => $examName,
-            "examSetName" => $examSetName,
+            "examSlug" => $examSlug,
+            "examSetSlug" => $examSetSlug,
             "questionNumber" => $questionNumber,
         ]);
 
