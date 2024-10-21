@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Models\Exam;
 use App\Models\UserProgress;
 
 /**
@@ -11,16 +12,42 @@ use App\Models\UserProgress;
 class HomeController extends Controller
 {
     /**
-     * Renders the home page with user progress data.
+     * Renders the home page with dynamic user progress data.
      *
      * @return string Rendered view content.
      */
     public function index(): string
     {
-        $userProgressData = $this->getUserProgressData();
+        $userId = $this->getCurrentUserId();
+        $exams = Exam::findAll();
+
+        $examsData = [];
+        foreach ($exams as $exam) {
+            $examSets = $exam->getExamSets();
+            if (empty($examSets)) {
+                $examsData[] = [
+                    "name" => $exam->name,
+                    "status" => "disabled",
+                ];
+                continue;
+            }
+
+            $allSetsCompleted = true;
+            foreach ($examSets as $set) {
+                if (!UserProgress::hasCompletedExamSet($userId, $set->id)) {
+                    $allSetsCompleted = false;
+                    break;
+                }
+            }
+
+            $examsData[] = [
+                "name" => $exam->name,
+                "status" => $allSetsCompleted ? "completed" : "available",
+            ];
+        }
 
         return $this->render("home/index", [
-            "user_progress_data" => $userProgressData,
+            "exams_data" => $examsData,
         ]);
     }
 
