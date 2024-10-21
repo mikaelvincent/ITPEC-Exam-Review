@@ -21,7 +21,10 @@ class ExamController extends Controller
         $examName = $params["exam"] ?? "Unknown Exam";
 
         // Retrieve user progress for the exam
-        $userProgress = $this->getUserProgressForExam($examName);
+        $userProgress = UserProgress::getProgressForExam(
+            $this->getCurrentUserId(),
+            $examName
+        );
 
         return $this->render("exam/index", [
             "exam_name" => $examName,
@@ -42,7 +45,8 @@ class ExamController extends Controller
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
 
         // Retrieve user progress for the exam set
-        $userProgress = $this->getUserProgressForExamSet(
+        $userProgress = UserProgress::getProgressForExamSet(
+            $this->getCurrentUserId(),
             $examName,
             $examSetName
         );
@@ -68,7 +72,8 @@ class ExamController extends Controller
         $questionNumber = $params["question_number"] ?? "Unknown Question";
 
         // Retrieve user progress for the question
-        $userProgress = $this->getUserProgressForQuestion(
+        $userProgress = UserProgress::getProgressForQuestion(
+            $this->getCurrentUserId(),
             $examName,
             $examSetName,
             $questionNumber
@@ -166,49 +171,5 @@ class ExamController extends Controller
         // Example:
         $examSet = \App\Models\ExamSet::findByName($examSetName);
         return $examSet->id ?? null;
-    }
-
-    /**
-     * Retrieves user progress for a specific exam.
-     *
-     * @param string $examName
-     * @return array User progress data.
-     */
-    protected function getUserProgressForExam(string $examName): array
-    {
-        // Implement logic to retrieve and structure user progress data
-        return [];
-    }
-
-    /**
-     * Retrieves user progress for a specific exam set.
-     *
-     * @param string $examName
-     * @param string $examSetName
-     * @return array User progress data.
-     */
-    protected function getUserProgressForExamSet(
-        string $examName,
-        string $examSetName
-    ): array {
-        // Implement logic to retrieve and structure user progress data
-        return [];
-    }
-
-    /**
-     * Retrieves user progress for a specific question.
-     *
-     * @param string $examName
-     * @param string $examSetName
-     * @param string $questionNumber
-     * @return array User progress data.
-     */
-    protected function getUserProgressForQuestion(
-        string $examName,
-        string $examSetName,
-        string $questionNumber
-    ): array {
-        // Implement logic to retrieve and structure user progress data
-        return [];
     }
 }
