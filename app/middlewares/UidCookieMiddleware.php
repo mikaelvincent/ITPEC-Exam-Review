@@ -4,6 +4,8 @@ namespace App\Middlewares;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\Session;
+use App\Core\Cookie;
 use App\Models\User;
 use App\Core\Logger;
 
@@ -22,7 +24,7 @@ class UidCookieMiddleware
     public function __invoke(Request $request, Response $response): void
     {
         $uidCookieName = "uid";
-        $uid = $_COOKIE[$uidCookieName] ?? null;
+        $uid = Cookie::get($uidCookieName);
         $cookieExpiry = (int) ($_ENV["UID_COOKIE_EXPIRY"] ?? 315360000); // Default to 10 years
         $logger = Logger::getInstance();
 
@@ -31,14 +33,14 @@ class UidCookieMiddleware
             $user = User::findByUid($uid);
             if ($user) {
                 // Reset the cookie's expiry time
-                setcookie($uidCookieName, $uid, [
+                Cookie::set($uidCookieName, $uid, [
                     "expires" => time() + $cookieExpiry,
                     "path" => "/",
                     "secure" => isset($_SERVER["HTTPS"]),
                     "httponly" => true,
                     "samesite" => "Lax",
                 ]);
-                $_SESSION["user_id"] = $user->id;
+                Session::set("user_id", $user->id);
 
                 // Log successful UID validation
                 $logger->info("Valid UID found. User ID: {$user->id}.");
@@ -60,14 +62,14 @@ class UidCookieMiddleware
         $user->uid = $newUid;
         if ($user->save()) {
             // Set the UID cookie
-            setcookie($uidCookieName, $newUid, [
+            Cookie::set($uidCookieName, $newUid, [
                 "expires" => time() + $cookieExpiry,
                 "path" => "/",
                 "secure" => isset($_SERVER["HTTPS"]),
                 "httponly" => true,
                 "samesite" => "Lax",
             ]);
-            $_SESSION["user_id"] = $user->id;
+            Session::set("user_id", $user->id);
 
             // Log UID generation and user creation
             $logger->info(
