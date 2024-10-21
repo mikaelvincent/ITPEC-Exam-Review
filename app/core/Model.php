@@ -4,6 +4,7 @@ namespace App\Core;
 
 use App\Core\Database;
 use PDOException;
+use App\Core\Logger;
 
 /**
  * Base Model class providing common database interaction functionalities.
@@ -30,6 +31,47 @@ abstract class Model
      * @var array
      */
     protected array $attributes = [];
+
+    /**
+     * Array to store validation errors.
+     *
+     * @var array
+     */
+    protected array $validationErrors = [];
+
+    /**
+     * Magic getter to access attributes.
+     *
+     * @param string $name The attribute name.
+     * @return mixed The attribute value.
+     */
+    public function __get(string $name)
+    {
+        return $this->attributes[$name] ?? null;
+    }
+
+    /**
+     * Magic setter to set attributes.
+     *
+     * @param string $name The attribute name.
+     * @param mixed $value The attribute value.
+     * @return void
+     */
+    public function __set(string $name, $value): void
+    {
+        $this->attributes[$name] = $value;
+    }
+
+    /**
+     * Magic method to check if an attribute is set.
+     *
+     * @param string $name The attribute name.
+     * @return bool True if set, false otherwise.
+     */
+    public function __isset(string $name): bool
+    {
+        return isset($this->attributes[$name]);
+    }
 
     /**
      * Finds a record by its primary key.
@@ -109,8 +151,9 @@ abstract class Model
     {
         $errors = $this->validate();
         if (!empty($errors)) {
+            $logger = Logger::getInstance();
             foreach ($errors as $error) {
-                error_log($error);
+                $logger->error("Validation Error: " . $error);
             }
             return false;
         }
@@ -143,13 +186,16 @@ abstract class Model
         try {
             $db->execute($sql, $this->attributes);
             if (!isset($this->attributes[$this->primaryKey])) {
-                $this->attributes[$this->primaryKey] = $db->fetch(
-                    "SELECT LAST_INSERT_ID() as id"
-                )["id"];
+                $this->attributes[
+                    $this->primaryKey
+                ] = (int) $db->getLastInsertId();
             }
             return true;
         } catch (PDOException $e) {
-            error_log($e->getMessage());
+            $logger = Logger::getInstance();
+            $logger->error(
+                "Database Error on saving model: " . $e->getMessage()
+            );
             return false;
         }
     }
@@ -172,7 +218,10 @@ abstract class Model
             $db->execute($sql, ["id" => $this->attributes[$this->primaryKey]]);
             return true;
         } catch (PDOException $e) {
-            error_log($e->getMessage());
+            $logger = Logger::getInstance();
+            $logger->error(
+                "Database Error on deleting model: " . $e->getMessage()
+            );
             return false;
         }
     }
@@ -187,29 +236,6 @@ abstract class Model
     public function validate(): array
     {
         return [];
-    }
-
-    /**
-     * Magic getter to access attributes.
-     *
-     * @param string $name The attribute name.
-     * @return mixed The attribute value.
-     */
-    public function __get(string $name)
-    {
-        return $this->attributes[$name] ?? null;
-    }
-
-    /**
-     * Magic setter to set attributes.
-     *
-     * @param string $name The attribute name.
-     * @param mixed $value The attribute value.
-     * @return void
-     */
-    public function __set(string $name, $value): void
-    {
-        $this->attributes[$name] = $value;
     }
 
     /**

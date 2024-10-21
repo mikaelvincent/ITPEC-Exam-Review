@@ -173,4 +173,14 @@ class Database
         $stmt = $this->query($sql, $params);
         return $stmt->rowCount();
     }
+
+    /**
+     * Retrieves the last inserted ID.
+     *
+     * @return string The last insert ID.
+     */
+    public function getLastInsertId(): string
+    {
+        return $this->pdo->lastInsertId();
+    }
 }

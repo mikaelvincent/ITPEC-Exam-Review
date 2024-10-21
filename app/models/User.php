@@ -30,12 +30,12 @@ class User extends Model
         $errors = [];
 
         // Validate UID for unregistered users
-        if (empty($this->uid)) {
+        if (!$this->isRegistered() && empty($this->uid)) {
             $errors[] = "UID is required for unregistered users.";
         }
 
         // If user is registered, validate username and password
-        if (!empty($this->username) || !empty($this->password_hash)) {
+        if ($this->isRegistered()) {
             if (empty($this->username)) {
                 $errors[] = "Username is required for registered users.";
             } elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $this->username)) {
