@@ -74,21 +74,13 @@ class Request
 
         if ($this->getMethod() === "GET") {
             foreach ($_GET as $key => $value) {
-                $body[$key] = filter_input(
-                    INPUT_GET,
-                    $key,
-                    FILTER_SANITIZE_SPECIAL_CHARS
-                );
+                $body[$key] = Validation::sanitize($value);
             }
         }
 
         if ($this->getMethod() === "POST") {
             foreach ($_POST as $key => $value) {
-                $body[$key] = filter_input(
-                    INPUT_POST,
-                    $key,
-                    FILTER_SANITIZE_SPECIAL_CHARS
-                );
+                $body[$key] = Validation::sanitize($value);
             }
         }
 
