@@ -81,4 +81,19 @@ class Validation
     {
         return filter_var($data, FILTER_VALIDATE_INT) !== false;
     }
+
+    /**
+     * Validates a password against defined security criteria.
+     *
+     * @param string $password The password to validate.
+     * @return bool True if valid, false otherwise.
+     */
+    public static function validatePassword(string $password): bool
+    {
+        // Criteria: at least 8 characters, includes letters and numbers
+        return preg_match(
+            '/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/',
+            $password
+        ) === 1;
+    }
 }
