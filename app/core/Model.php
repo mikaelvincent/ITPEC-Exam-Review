@@ -40,6 +40,40 @@ abstract class Model
     protected array $validationErrors = [];
 
     /**
+     * Magic getter to access attributes.
+     *
+     * @param string $name The attribute name.
+     * @return mixed The attribute value.
+     */
+    public function __get(string $name)
+    {
+        return $this->attributes[$name] ?? null;
+    }
+
+    /**
+     * Magic setter to set attributes.
+     *
+     * @param string $name The attribute name.
+     * @param mixed $value The attribute value.
+     * @return void
+     */
+    public function __set(string $name, $value): void
+    {
+        $this->attributes[$name] = $value;
+    }
+
+    /**
+     * Magic method to check if an attribute is set.
+     *
+     * @param string $name The attribute name.
+     * @return bool True if set, false otherwise.
+     */
+    public function __isset(string $name): bool
+    {
+        return isset($this->attributes[$name]);
+    }
+
+    /**
      * Finds a record by its primary key.
      *
      * @param int $id The primary key value.
@@ -202,29 +236,6 @@ abstract class Model
     public function validate(): array
     {
         return [];
-    }
-
-    /**
-     * Magic getter to access attributes.
-     *
-     * @param string $name The attribute name.
-     * @return mixed The attribute value.
-     */
-    public function __get(string $name)
-    {
-        return $this->attributes[$name] ?? null;
-    }
-
-    /**
-     * Magic setter to set attributes.
-     *
-     * @param string $name The attribute name.
-     * @param mixed $value The attribute value.
-     * @return void
-     */
-    public function __set(string $name, $value): void
-    {
-        $this->attributes[$name] = $value;
     }
 
     /**
