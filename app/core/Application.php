@@ -64,10 +64,11 @@ class Application
      */
     protected function registerRoutes(): void
     {
-        // Define default home route
-        $this->router->get("/", "HomeController@index");
+        // Static route for the contributors page
+        $this->router->get("/contributors", "ContributorsController@index");
 
         // Define dynamic routes for exams, exam sets, and questions
+        $this->router->get("/", "HomeController@index");
         $this->router->get("/{exam}", "ExamController@index");
         $this->router->get("/{exam}/{examset}", "ExamController@examSet");
         $this->router->get(
