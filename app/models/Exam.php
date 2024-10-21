@@ -27,17 +27,7 @@ class Exam extends Model
      */
     public static function findByName(string $name): ?Exam
     {
-        $instance = new static();
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM {$instance->table} WHERE name = :name LIMIT 1";
-        $data = $db->fetch($sql, ["name" => $name]);
-
-        if ($data) {
-            $instance->attributes = $data;
-            return $instance;
-        }
-
-        return null;
+        return self::findBy("name", $name);
     }
 
     /**

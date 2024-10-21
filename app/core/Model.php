@@ -95,6 +95,28 @@ abstract class Model
     }
 
     /**
+     * Finds a single record by a specified column and value.
+     *
+     * @param string $column The column name to filter by.
+     * @param mixed $value The value to match.
+     * @return static|null The found model instance or null.
+     */
+    public static function findBy(string $column, $value): ?self
+    {
+        $instance = new static();
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM {$instance->table} WHERE {$column} = :value LIMIT 1";
+        $data = $db->fetch($sql, ["value" => $value]);
+
+        if ($data) {
+            $instance->attributes = $data;
+            return $instance;
+        }
+
+        return null;
+    }
+
+    /**
      * Retrieves all records from the table.
      *
      * @return array An array of model instances.
