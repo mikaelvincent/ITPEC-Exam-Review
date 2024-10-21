@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserProgress;
+use App\Core\Validation;
 
 /**
  * Handles operations related to exams, exam sets, and questions.
@@ -19,6 +20,13 @@ class ExamController extends Controller
     public function index(array $params): string
     {
         $examName = $params["exam"] ?? "Unknown Exam";
+
+        // Validate exam name
+        if (
+            !Validation::validatePattern('/^[a-zA-Z0-9\s_-]{3,50}$/', $examName)
+        ) {
+            return "Invalid exam name.";
+        }
 
         // Fetch user progress for the specified exam
         $userProgress = $this->getUserProgress($examName);
@@ -39,6 +47,16 @@ class ExamController extends Controller
     {
         $examName = $params["exam"] ?? "Unknown Exam";
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
+
+        // Validate exam set name
+        if (
+            !Validation::validatePattern(
+                '/^[a-zA-Z0-9\s_-]{3,50}$/',
+                $examSetName
+            )
+        ) {
+            return "Invalid exam set name.";
+        }
 
         // Fetch user progress for the specified exam set
         $userProgress = $this->getUserProgress($examName, $examSetName);
@@ -61,6 +79,11 @@ class ExamController extends Controller
         $examName = $params["exam"] ?? "Unknown Exam";
         $examSetName = $params["examset"] ?? "Unknown Exam Set";
         $questionNumber = $params["question_number"] ?? "Unknown Question";
+
+        // Validate question number
+        if (!Validation::validateInteger($questionNumber)) {
+            return "Invalid question number.";
+        }
 
         // Fetch user progress for the specified question
         $userProgress = $this->getUserProgress(
@@ -85,7 +108,16 @@ class ExamController extends Controller
      */
     public function resetExamProgress(array $params): string
     {
-        $examId = $this->getExamIdByName($params["exam"] ?? "");
+        $examName = $params["exam"] ?? "";
+
+        // Validate exam name
+        if (
+            !Validation::validatePattern('/^[a-zA-Z0-9\s_-]{3,50}$/', $examName)
+        ) {
+            return "Invalid exam name.";
+        }
+
+        $examId = $this->getExamIdByName($examName);
 
         if (!$examId) {
             return "Exam not found.";
@@ -108,7 +140,19 @@ class ExamController extends Controller
      */
     public function resetExamSetProgress(array $params): string
     {
-        $examSetId = $this->getExamSetIdByName($params["examset"] ?? "");
+        $examSetName = $params["examset"] ?? "";
+
+        // Validate exam set name
+        if (
+            !Validation::validatePattern(
+                '/^[a-zA-Z0-9\s_-]{3,50}$/',
+                $examSetName
+            )
+        ) {
+            return "Invalid exam set name.";
+        }
+
+        $examSetId = $this->getExamSetIdByName($examSetName);
 
         if (!$examSetId) {
             return "Exam set not found.";
