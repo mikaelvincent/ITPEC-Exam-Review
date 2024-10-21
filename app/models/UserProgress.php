@@ -42,9 +42,9 @@ class UserProgress extends Model
                     JOIN question q ON a.question_id = q.id
                     WHERE up.user_id = :userId AND q.exam_set_id IN (
                         SELECT id FROM examset WHERE exam_id = :examId
-                    )";
+                    ) AND up.is_active = 1";
             return $db->execute($sql, [
-                "userId" => $this->userId,
+                "userId" => $this->user_id,
                 "examId" => $examId,
             ]) > 0;
         }
@@ -55,9 +55,9 @@ class UserProgress extends Model
                         SELECT a.id FROM answer a
                         JOIN question q ON a.question_id = q.id
                         WHERE q.exam_set_id = :examSetId
-                    )";
+                    ) AND is_active = 1";
             return $db->execute($sql, [
-                "userId" => $this->userId,
+                "userId" => $this->user_id,
                 "examSetId" => $examSetId,
             ]) > 0;
         }
@@ -223,7 +223,7 @@ class UserProgress extends Model
                   )
                   AND up.is_active = 1";
         $result = $db->fetch($sql, [
-            "userId" => $this->userId,
+            "userId" => $this->user_id,
             "examId" => $examId,
         ]);
 
@@ -247,7 +247,7 @@ class UserProgress extends Model
                   AND q.exam_set_id = :examSetId
                   AND up.is_active = 1";
         $result = $db->fetch($sql, [
-            "userId" => $this->userId,
+            "userId" => $this->user_id,
             "examSetId" => $examSetId,
         ]);
 
@@ -261,7 +261,7 @@ class UserProgress extends Model
      */
     public function getUser(): ?User
     {
-        return $this->getRelatedModel(User::class, "userId");
+        return $this->getRelatedModel(User::class, "user_id");
     }
 
     /**
@@ -271,6 +271,6 @@ class UserProgress extends Model
      */
     public function getSelectedAnswer(): ?Answer
     {
-        return $this->getRelatedModel(Answer::class, "selectedAnswerId");
+        return $this->getRelatedModel(Answer::class, "selected_answer_id");
     }
 }
