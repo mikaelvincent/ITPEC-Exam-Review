@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Core\Cookie;
 use App\Models\User;
 use App\Core\Logger;
+use App\Core\Validation;
 
 /**
  * UidCookieMiddleware manages UID cookies for unregistered users.
@@ -29,39 +30,43 @@ class UidCookieMiddleware
         $logger = Logger::getInstance();
 
         if ($uid) {
-            // Verify that UID exists in the user table
-            $user = User::findByUid($uid);
-            if ($user) {
-                // Reset the cookie's expiry time
-                Cookie::set($uidCookieName, $uid, [
-                    "expires" => time() + $cookieExpiry,
-                    "path" => "/",
-                    "secure" => isset($_SERVER["HTTPS"]),
-                    "httponly" => true,
-                    "samesite" => "Lax",
-                ]);
-                Session::set("user_id", $user->id);
+            // Validate UUID v4 format
+            if (!Validation::validatePattern('/^[a-f0-9-]{36}$/', $uid)) {
+                $logger->warning("Invalid UID format detected: {$uid}");
+                $uid = null;
+            } else {
+                // Verify that UID exists in the user table
+                $user = User::findByUid($uid);
+                if ($user) {
+                    // Reset the cookie's expiry time
+                    Cookie::set($uidCookieName, $uid, [
+                        "expires" => time() + $cookieExpiry,
+                        "path" => "/",
+                        "secure" => isset($_SERVER["HTTPS"]),
+                        "httponly" => true,
+                        "samesite" => "Lax",
+                    ]);
+                    Session::set("user_id", $user->id);
 
-                // Log successful UID validation
-                $logger->info("Valid UID found. User ID: {$user->id}.");
-                return;
+                    // Log successful UID validation
+                    $logger->info("Valid UID found. User ID: {$user->id}.");
+                    return;
+                }
+                // UID is invalid; proceed to generate a new one
+                $logger->warning("UID does not correspond to any user: {$uid}");
             }
-            // UID is invalid; proceed to generate a new one
-            $logger->info("Invalid UID detected. Generating new UID.");
-        } else {
-            $logger->info("No UID cookie found. Generating new UID.");
         }
 
-        // Generate a new unique UUID v4
-        do {
-            $newUid = $this->generateUuidV4();
-        } while (User::findByUid($newUid));
+        // Generate a new UID if none exists or the existing UID is invalid
+        $logger->info("Generating a new UID for the user.");
+
+        $newUid = $this->generateUuidV4();
 
         // Insert new user with the generated UID
         $user = new User();
         $user->uid = $newUid;
         if ($user->save()) {
-            // Set the UID cookie
+            // Set the UID cookie with secure flags
             Cookie::set($uidCookieName, $newUid, [
                 "expires" => time() + $cookieExpiry,
                 "path" => "/",
