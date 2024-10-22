@@ -62,6 +62,33 @@ class Question extends Model
     }
 
     /**
+     * Finds all questions by a specific column and value.
+     *
+     * @param string $column Column name for filtering (e.g., 'exam_set_id').
+     * @param mixed $value Value to match the column.
+     * @return array An array of Question instances.
+     */
+    public static function findAllBy(string $column, $value): array
+    {
+        if (!in_array($column, ['exam_set_id', 'question_number'], true)) {
+            throw new \InvalidArgumentException("Invalid column: $column");
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM question WHERE {$column} = :value";
+        $rows = $db->fetchAll($sql, ['value' => $value]);
+
+        $questions = [];
+        foreach ($rows as $row) {
+            $question = new self();
+            $question->setAttributes($row);
+            $questions[] = $question;
+        }
+
+        return $questions;
+    }
+
+    /**
      * Finds a question by validated exam set slug and question number.
      *
      * @param string $examSetSlug The slug of the exam set.
