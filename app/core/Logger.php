@@ -2,11 +2,13 @@
 
 namespace App\Core;
 
+use App\Core\Interfaces\LoggerInterface;
+
 /**
  * Logger class centralizes logging activities across the application.
  * It handles different log levels and manages log file rotation.
  */
-class Logger
+class Logger implements LoggerInterface
 {
     /**
      * The singleton instance of the Logger.

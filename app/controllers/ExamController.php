@@ -101,17 +101,4 @@ class ExamController extends Controller
             "explanations" => $explanations,
         ]);
     }
-
-    /**
-     * Renders an error view with the given message.
-     *
-     * @param string $message Error message to display.
-     * @return string Rendered error view content.
-     */
-    protected function renderError(string $message): string
-    {
-        return $this->render("_error", [
-            "message" => $message,
-        ]);
-    }
 }

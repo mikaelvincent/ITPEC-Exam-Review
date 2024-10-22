@@ -4,12 +4,14 @@ namespace App\Core;
 
 use PDO;
 use PDOException;
+use PDOStatement;
+use App\Core\Interfaces\DatabaseInterface;
 
 /**
  * Database class handles the connection to the database using PDO.
  * Implements the Singleton pattern to ensure a single connection instance.
  */
-class Database
+class Database implements DatabaseInterface
 {
     /**
      * The single instance of the Database.
