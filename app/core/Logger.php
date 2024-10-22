@@ -86,6 +86,17 @@ class Logger
     }
 
     /**
+     * Logs a warning message.
+     *
+     * @param string $message The message to log.
+     * @return void
+     */
+    public function warning(string $message): void
+    {
+        $this->writeLog("WARNING", $message);
+    }
+
+    /**
      * Writes a log entry to the log file.
      *
      * @param string $level The log level (e.g., INFO, ERROR).
