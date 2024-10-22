@@ -15,11 +15,12 @@ class UidCookieMiddleware
     /**
      * Executes the middleware logic for UID cookie management.
      *
-     * @param Request $request
-     * @param Response $response
-     * @return void
+     * @param Request $request The current request instance.
+     * @param Response $response The current response instance.
+     * @param callable $next The next middleware or controller action.
+     * @return mixed
      */
-    public function __invoke(Request $request, Response $response): void
+    public function __invoke(Request $request, Response $response, callable $next)
     {
         $logger = Logger::getInstance();
         $uidCookieName = 'uid';
@@ -27,5 +28,8 @@ class UidCookieMiddleware
 
         $uidManager = new UidManager($logger, $uidCookieName, $cookieExpiry);
         $uidManager->handleUid();
+
+        // Proceed to the next middleware or controller
+        return $next($request, $response);
     }
 }

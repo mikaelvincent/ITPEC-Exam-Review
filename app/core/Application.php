@@ -31,11 +31,11 @@ class Application
     public Router $router;
 
     /**
-     * An array of middleware to execute.
+     * The middleware pipeline instance.
      *
-     * @var array
+     * @var MiddlewarePipeline
      */
-    public array $middleware = [];
+    protected MiddlewarePipeline $middlewarePipeline;
 
     /**
      * Logger instance.
@@ -51,10 +51,11 @@ class Application
      */
     public function __construct()
     {
-        $this->logger = new Logger();
+        $this->logger = Logger::getInstance();
         $this->request = new Request();
         $this->response = new Response();
         $this->router = new Router($this->request);
+        $this->middlewarePipeline = new MiddlewarePipeline();
 
         $this->registerRoutes();
     }
@@ -102,7 +103,7 @@ class Application
      */
     public function addMiddleware(callable $middleware): void
     {
-        $this->middleware[] = $middleware;
+        $this->middlewarePipeline->addMiddleware($middleware);
     }
 
     /**
@@ -113,12 +114,13 @@ class Application
      */
     public function run(): void
     {
-        // Execute middleware
-        foreach ($this->middleware as $middleware) {
-            $middleware($this->request, $this->response);
-        }
-
-        $route = $this->router->resolve($this->request, $this->response);
-        echo $route;
+        $this->middlewarePipeline->handle(
+            $this->request,
+            $this->response,
+            function ($request, $response) {
+                $route = $this->router->resolve($request, $response);
+                echo $route;
+            }
+        );
     }
 }
