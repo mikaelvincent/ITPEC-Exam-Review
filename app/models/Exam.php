@@ -37,6 +37,6 @@ class Exam extends Model
      */
     public function getExamSets(): array
     {
-        return $this->getRelatedModels(ExamSet::class, "exam_id");
+        return ExamSet::findAllBy("exam_id", $this->id);
     }
 }
