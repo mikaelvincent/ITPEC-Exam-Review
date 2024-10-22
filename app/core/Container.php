@@ -2,6 +2,9 @@
 
 namespace App\Core;
 
+use ReflectionClass;
+use ReflectionNamedType;
+
 /**
  * A simple Dependency Injection Container to manage object creation and dependencies.
  */
@@ -118,10 +121,10 @@ class Container
         $dependencies = [];
 
         foreach ($parameters as $parameter) {
-            $dependency = $parameter->getClass();
+            $type = $parameter->getType();
 
-            if ($dependency !== null) {
-                $dependencies[] = $this->make($dependency->name);
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
+                $dependencies[] = $this->make($type->getName());
             } elseif ($parameter->isDefaultValueAvailable()) {
                 $dependencies[] = $parameter->getDefaultValue();
             } else {
