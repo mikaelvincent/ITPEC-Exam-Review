@@ -2,17 +2,19 @@
 
 namespace App\Core;
 
+use App\Core\Interfaces\LoggerInterface;
+
 /**
  * Application class responsible for initializing and running the application.
  */
 class Application
 {
     /**
-     * The current application instance.
+     * The singleton instance of the Application.
      *
-     * @var Application|null
+     * @var Application
      */
-    public static ?Application $app = null;
+    public static Application $app;
 
     /**
      * The current request instance.
@@ -36,25 +38,68 @@ class Application
     public Router $router;
 
     /**
-     * An array of middleware to execute.
+     * The session instance.
      *
-     * @var array
+     * @var Session
      */
-    public array $middleware = [];
+    public Session $session;
+
+    /**
+     * The middleware pipeline instance.
+     *
+     * @var MiddlewarePipeline
+     */
+    protected MiddlewarePipeline $middlewarePipeline;
+
+    /**
+     * Logger instance.
+     *
+     * @var LoggerInterface
+     */
+    public LoggerInterface $logger;
+
+    /**
+     * The dependency injection container.
+     *
+     * @var Container
+     */
+    public Container $container;
 
     /**
      * Application constructor.
      *
-     * Initializes the request, response, router, and middleware components.
+     * Initializes the container and core components.
      */
     public function __construct()
     {
         self::$app = $this;
-        $this->request = new Request();
-        $this->response = new Response();
-        $this->router = new Router();
 
-        $this->registerRoutes();
+        // Initialize the container
+        $this->container = new Container();
+
+        // Bind core services
+        $this->container->bindSingleton(LoggerInterface::class, Logger::getInstance());
+        $this->container->bind(Session::class);
+        $this->container->bind(Request::class);
+        $this->container->bind(Response::class);
+        $this->container->bind(Router::class, function ($container) {
+            return new Router(
+                $container->make(Request::class),
+                $container->make(Session::class),
+                $container
+            );
+        });
+
+        // Resolve core services
+        $this->logger = $this->container->make(LoggerInterface::class);
+        $this->session = $this->container->make(Session::class);
+        $this->request = $this->container->make(Request::class);
+        $this->response = $this->container->make(Response::class);
+        $this->router = $this->container->make(Router::class);
+
+        $this->middlewarePipeline = new MiddlewarePipeline();
+
+        $this->registerRoutes();  // Ensure routes are registered
     }
 
     /**
@@ -64,32 +109,12 @@ class Application
      */
     protected function registerRoutes(): void
     {
-        // Static route for the contributors page
-        $this->router->get("/contributors", "ContributorsController@index");
-
-        // Define dynamic routes for exams, exam sets, and questions using slugs
-        $this->router->get("/", "HomeController@index");
-        $this->router->get("/{slug}", "ExamController@index");
-        $this->router->get("/{slug}/{examset_slug}", "ExamController@examSet");
-        $this->router->get(
-            "/{slug}/{examset_slug}/Q{question_number}",
-            "ExamController@question"
-        );
-
-        // Route to reset exam progress using slug
-        $this->router->get("/{slug}/reset", "ExamController@resetExamProgress");
-
-        // Route to reset exam set progress using slug
-        $this->router->get(
-            "/{slug}/{examset_slug}/reset",
-            "ExamController@resetExamSetProgress"
-        );
-
-        // Route to generate explanations
-        $this->router->get(
-            "/generate-explanation/{questionId}",
-            "ExamController@generateExplanation"
-        );
+        $this->router->get('/', 'HomeController@index');
+        $this->router->get('/contributors', 'ContributorsController@index');
+        $this->router->get('/{slug}', 'ExamController@index');
+        $this->router->get('/{slug}/congratulations', 'ExamController@congratulations');
+        $this->router->get('/{slug}/{examset_slug}', 'ExamController@examSet');
+        $this->router->get('/{slug}/{examset_slug}/Q{question_number}', 'ExamController@question');
     }
 
     /**
@@ -100,7 +125,7 @@ class Application
      */
     public function addMiddleware(callable $middleware): void
     {
-        $this->middleware[] = $middleware;
+        $this->middlewarePipeline->addMiddleware($middleware);
     }
 
     /**
@@ -111,29 +136,13 @@ class Application
      */
     public function run(): void
     {
-        // Execute middleware
-        foreach ($this->middleware as $middleware) {
-            $middleware($this->request, $this->response);
-        }
-
-        $route = $this->router->resolve($this->request);
-        echo $route;
-    }
-
-    /**
-     * Retrieves a human-readable error title based on the status code.
-     *
-     * @param int $code
-     * @return string
-     */
-    protected function getErrorTitle(int $code): string
-    {
-        $titles = [
-            404 => "404 Not Found",
-            500 => "500 Internal Server Error",
-            401 => "401 Unauthorized",
-        ];
-
-        return $titles[$code] ?? "Error";
+        $this->middlewarePipeline->handle(
+            $this->request,
+            $this->response,
+            function ($request, $response) {
+                $route = $this->router->resolve($request, $response);
+                echo $route;
+            }
+        );
     }
 }

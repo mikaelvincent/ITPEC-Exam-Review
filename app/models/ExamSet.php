@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Database;
+use App\Core\Validation;
 
 /**
  * ExamSet model represents the `examset` table in the database.
@@ -20,14 +22,27 @@ class ExamSet extends Model
     protected string $table = "examset";
 
     /**
-     * Finds an exam set by its slug.
+     * Validates the ExamSet model's attributes.
      *
-     * @param string $slug The slug of the exam set.
-     * @return ExamSet|null The found ExamSet instance or null.
+     * @return array Validation errors, empty if none.
      */
-    public static function findBySlug(string $slug): ?ExamSet
+    public function validate(): array
     {
-        return self::findBy("slug", $slug);
+        $errors = [];
+
+        if (empty($this->exam_id) || !Validation::validateInteger($this->exam_id)) {
+            $errors[] = "Invalid exam ID.";
+        }
+
+        if (empty($this->name)) {
+            $errors[] = "Name is required.";
+        }
+
+        if (empty($this->slug) || !Validation::validateSlug($this->slug)) {
+            $errors[] = "Invalid slug.";
+        }
+
+        return $errors;
     }
 
     /**
@@ -47,6 +62,33 @@ class ExamSet extends Model
      */
     public function getQuestions(): array
     {
-        return $this->getRelatedModels(Question::class, "id");
+        return Question::findAllBy("exam_set_id", $this->id);
+    }
+
+    /**
+     * Retrieves all exam sets associated with the given column and value.
+     *
+     * @param string $column Column name for filtering.
+     * @param mixed $value Value to match the column.
+     * @return array An array of ExamSet instances.
+     */
+    public static function findAllBy(string $column, $value): array
+    {
+        if (!in_array($column, ['exam_id', 'name', 'slug'], true)) {
+            throw new \InvalidArgumentException("Invalid column: $column");
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM examset WHERE {$column} = :value";
+        $rows = $db->fetchAll($sql, ['value' => $value]);
+
+        $examSets = [];
+        foreach ($rows as $row) {
+            $examSet = new self();
+            $examSet->setAttributes($row);
+            $examSets[] = $examSet;
+        }
+
+        return $examSets;
     }
 }

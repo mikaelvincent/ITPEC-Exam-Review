@@ -2,7 +2,7 @@
 
 namespace App\Core;
 
-use App\Models\UserProgress;
+use App\Core\BreadcrumbGenerator;
 
 /**
  * Base Controller class providing common functionalities for all controllers.
@@ -10,19 +10,65 @@ use App\Models\UserProgress;
 class Controller
 {
     /**
-     * Retrieves the current user's ID from the session.
+     * The request instance.
      *
-     * @return int User ID.
+     * @var Request
      */
-    protected function getCurrentUserId(): int
-    {
-        return Session::get("user_id") ?? 0;
+    protected Request $request;
+
+    /**
+     * The response instance.
+     *
+     * @var Response
+     */
+    protected Response $response;
+
+    /**
+     * The session instance.
+     *
+     * @var Session
+     */
+    protected Session $session;
+
+    /**
+     * The router instance.
+     *
+     * @var Router
+     */
+    protected Router $router;
+
+    /**
+     * The breadcrumb generator instance.
+     *
+     * @var BreadcrumbGenerator
+     */
+    protected BreadcrumbGenerator $breadcrumbGenerator;
+
+    /**
+     * Controller constructor.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param Session $session
+     * @param Router $router
+     * @param BreadcrumbGenerator $breadcrumbGenerator
+     */
+    public function __construct(
+        Request $request,
+        Response $response,
+        Session $session,
+        Router $router,
+        BreadcrumbGenerator $breadcrumbGenerator
+    ) {
+        $this->request = $request;
+        $this->response = $response;
+        $this->session = $session;
+        $this->router = $router;
+        $this->breadcrumbGenerator = $breadcrumbGenerator;
     }
 
     /**
      * Renders a view with the provided parameters.
-     *
-     * Automatically includes breadcrumb navigation data.
      *
      * @param string $view Path to the view file.
      * @param array $params Parameters to pass to the view.
@@ -30,52 +76,49 @@ class Controller
      */
     public function render(string $view, array $params = []): string
     {
-        $params["breadcrumbs"] = $this->getBreadcrumbs();
-        return Application::$app->router->renderView($view, $params);
+        $pathSegments = explode('/', trim($this->request->getUri(), '/'));
+        $breadcrumbs = $this->breadcrumbGenerator->generate($pathSegments, $this->request->getBasePath());
+        $params["breadcrumbs"] = $breadcrumbs;
+        return $this->router->renderView($view, $params);
     }
 
     /**
-     * Retrieves breadcrumb navigation data.
+     * Renders an error view with the given message.
      *
-     * @return array Breadcrumbs for the current page.
+     * @param string $message Error message to display.
+     * @return string Rendered error view content.
      */
-    protected function getBreadcrumbs(): array
+    protected function renderError(string $message): string
     {
-        return Application::$app->router->getBreadcrumbs();
+        $breadcrumbs = $this->breadcrumbGenerator->generate(['error']);
+        return $this->render("_error", [
+            "message" => $message,
+            "breadcrumbs" => $breadcrumbs,
+        ]);
     }
 
     /**
-     * Fetches user progress based on the provided parameters.
+     * Retrieves the current user's ID from the session.
      *
-     * @param string $examName Name of the exam.
-     * @param string|null $examSetName Name of the exam set.
-     * @param string|null $questionNumber Number of the question.
-     * @return array User progress information.
+     * @return int User ID.
      */
-    protected function getUserProgress(
-        string $examName,
-        ?string $examSetName = null,
-        ?string $questionNumber = null
-    ): array {
-        $userId = $this->getCurrentUserId();
+    protected function getCurrentUserId(): int
+    {
+        return $this->session->get("user_id") ?? 0;
+    }
 
-        if ($questionNumber !== null && $examSetName !== null) {
-            return UserProgress::getProgressForQuestion(
-                $userId,
-                $examName,
-                $examSetName,
-                $questionNumber
-            );
+    /**
+     * Retrieves a model by its slug with validation.
+     *
+     * @param string $modelClass The model class name.
+     * @param string $slug The slug to search for.
+     * @return Model|null The model instance or null if not found.
+     */
+    protected function getModelBySlug(string $modelClass, string $slug): ?Model
+    {
+        if (!method_exists($modelClass, 'findByValidatedSlug')) {
+            throw new \Exception("Method findByValidatedSlug not found in {$modelClass}");
         }
-
-        if ($examSetName !== null) {
-            return UserProgress::getProgressForExamSet(
-                $userId,
-                $examName,
-                $examSetName
-            );
-        }
-
-        return UserProgress::getProgressForExam($userId, $examName);
+        return $modelClass::findByValidatedSlug($slug);
     }
 }

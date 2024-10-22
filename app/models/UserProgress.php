@@ -6,6 +6,7 @@ use App\Core\Model;
 use App\Core\Traits\Relationships;
 use App\Core\Database;
 use App\Core\Logger;
+use App\Core\Validation;
 
 /**
  * Tracks user progress for specific exams and exam sets.
@@ -20,6 +21,30 @@ class UserProgress extends Model
      * @var string
      */
     protected string $table = "userprogress";
+
+    /**
+     * Validates UserProgress model's attributes.
+     *
+     * @return array Validation errors, empty if none.
+     */
+    public function validate(): array
+    {
+        $errors = [];
+
+        if (empty($this->user_id) || !Validation::validateInteger($this->user_id)) {
+            $errors[] = "Invalid user ID.";
+        }
+
+        if (empty($this->selected_answer_id) || !Validation::validateInteger($this->selected_answer_id)) {
+            $errors[] = "Invalid selected answer ID.";
+        }
+
+        if (!isset($this->is_active) || !is_bool($this->is_active)) {
+            $errors[] = "Is_active must be a boolean value.";
+        }
+
+        return $errors;
+    }
 
     /**
      * Resets progress based on provided criteria.

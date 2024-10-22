@@ -2,14 +2,16 @@
 
 namespace App\Core;
 
+use App\Core\Interfaces\LoggerInterface;
+
 /**
  * Logger class centralizes logging activities across the application.
  * It handles different log levels and manages log file rotation.
  */
-class Logger
+class Logger implements LoggerInterface
 {
     /**
-     * The singleton instance of the Logger.
+     * Singleton instance of Logger.
      *
      * @var Logger|null
      */
@@ -36,26 +38,26 @@ class Logger
      */
     private function __construct()
     {
-        $logDirectory = __DIR__ . "/../../logs";
+        $logDirectory = __DIR__ . '/../../logs';
         if (!is_dir($logDirectory)) {
             mkdir($logDirectory, 0755, true);
         }
 
-        $this->logFile = $logDirectory . "/app.log";
+        $this->logFile = $logDirectory . '/app.log';
         $this->maxFileSize = 5 * 1024 * 1024; // 5 MB
 
         // Ensure the log file exists to prevent filesize() errors
         if (!file_exists($this->logFile)) {
-            file_put_contents($this->logFile, "");
+            file_put_contents($this->logFile, '');
         }
     }
 
     /**
      * Retrieves the singleton instance of the Logger.
      *
-     * @return Logger The Logger instance.
+     * @return LoggerInterface
      */
-    public static function getInstance(): Logger
+    public static function getInstance(): LoggerInterface
     {
         if (self::$instance === null) {
             self::$instance = new Logger();
@@ -71,7 +73,7 @@ class Logger
      */
     public function info(string $message): void
     {
-        $this->writeLog("INFO", $message);
+        $this->writeLog('INFO', $message);
     }
 
     /**
@@ -82,7 +84,7 @@ class Logger
      */
     public function error(string $message): void
     {
-        $this->writeLog("ERROR", $message);
+        $this->writeLog('ERROR', $message);
     }
 
     /**
@@ -93,7 +95,7 @@ class Logger
      */
     public function warning(string $message): void
     {
-        $this->writeLog("WARNING", $message);
+        $this->writeLog('WARNING', $message);
     }
 
     /**
@@ -105,16 +107,15 @@ class Logger
      */
     private function writeLog(string $level, string $message): void
     {
-        // Ensure the log file exists before attempting to get its size
         if (!file_exists($this->logFile)) {
-            file_put_contents($this->logFile, "");
+            file_put_contents($this->logFile, '');
         }
 
         if (filesize($this->logFile) >= $this->maxFileSize) {
             $this->rotateLog();
         }
 
-        $timestamp = date("Y-m-d H:i:s");
+        $timestamp = date('Y-m-d H:i:s');
         $logEntry = "[{$timestamp}] [{$level}] {$message}\n";
         file_put_contents($this->logFile, $logEntry, FILE_APPEND | LOCK_EX);
     }
@@ -126,11 +127,11 @@ class Logger
      */
     private function rotateLog(): void
     {
-        $timestamp = date("Ymd_His");
-        $rotatedFile = $this->logFile . "." . $timestamp;
+        $timestamp = date('Ymd_His');
+        $rotatedFile = $this->logFile . '.' . $timestamp;
         rename($this->logFile, $rotatedFile);
 
         // Create a new empty log file after rotation
-        file_put_contents($this->logFile, "");
+        file_put_contents($this->logFile, '');
     }
 }

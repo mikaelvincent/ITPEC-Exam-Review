@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Exam;
-use App\Models\UserProgress;
 
 /**
  * HomeController manages requests related to the home page.
@@ -34,15 +33,11 @@ class HomeController extends Controller
                 continue;
             }
 
-            // Instantiate UserProgress and set user_id before calling the method
-            $userProgress = new UserProgress();
-            $userProgress->user_id = $userId;
-            $hasProgress = $userProgress->hasCompletedExam($exam->id);
-            $isCompleted = $hasProgress;
+            $hasProgress = $exam->hasUserProgress($userId);
 
-            if ($isCompleted) {
+            if ($hasProgress['isCompleted']) {
                 $status = "completed";
-            } elseif ($hasProgress) {
+            } elseif ($hasProgress['hasProgress']) {
                 $status = "in_progress";
             } else {
                 $status = "available";
@@ -59,16 +54,5 @@ class HomeController extends Controller
         return $this->render("home/index", [
             "exams_data" => $examsData,
         ]);
-    }
-
-    /**
-     * Retrieves aggregated user progress data for display.
-     *
-     * @return array Aggregated user progress data.
-     */
-    protected function getUserProgressData(): array
-    {
-        $userId = $this->getCurrentUserId();
-        return UserProgress::getUserProgressData($userId);
     }
 }

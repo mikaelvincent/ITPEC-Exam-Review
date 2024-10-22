@@ -39,7 +39,7 @@ $title = "Home | ITPEC Exam Review"; ?>
 <div id="collapse-menu" class="collapse">
     <div class="row gy-3 row-cols-1 mb-5">
         <div class="col">
-            <a class="btn btn-outline-info btn-lg w-100" role="button" href="/contributors">Contributors</a>
+            <a class="btn btn-outline-info btn-lg w-100" role="button" href="contributors">Contributors</a>
         </div>
         <div class="col">
             <button class="btn btn-outline-info btn-lg w-100" type="button" data-bs-target="#website-stats" data-bs-toggle="modal">Website Stats</button>

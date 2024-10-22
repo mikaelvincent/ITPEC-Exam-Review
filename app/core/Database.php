@@ -4,20 +4,16 @@ namespace App\Core;
 
 use PDO;
 use PDOException;
+use PDOStatement;
+use App\Core\Interfaces\DatabaseInterface;
+use App\Core\Interfaces\LoggerInterface;
 
 /**
  * Database class handles the connection to the database using PDO.
- * Implements the Singleton pattern to ensure a single connection instance.
+ * Implements Singleton pattern.
  */
-class Database
+class Database implements DatabaseInterface
 {
-    /**
-     * The single instance of the Database.
-     *
-     * @var Database|null
-     */
-    private static ?Database $instance = null;
-
     /**
      * The PDO instance.
      *
@@ -26,11 +22,18 @@ class Database
     private PDO $pdo;
 
     /**
+     * Singleton instance of the Database class.
+     *
+     * @var Database|null
+     */
+    private static ?Database $instance = null;
+
+    /**
      * Logger instance for logging database activities.
      *
-     * @var Logger
+     * @var LoggerInterface
      */
-    private Logger $logger;
+    private LoggerInterface $logger;
 
     /**
      * The threshold in seconds to consider a query as slow.
@@ -40,15 +43,15 @@ class Database
     private float $slowQueryThreshold;
 
     /**
-     * Database constructor.
-     *
+     * Private constructor to prevent direct instantiation.
      * Initializes the PDO connection using environment variables.
      *
+     * @param LoggerInterface $logger Logger instance for logging.
      * @throws PDOException if the connection fails.
      */
-    private function __construct()
+    private function __construct(LoggerInterface $logger)
     {
-        $this->logger = Logger::getInstance();
+        $this->logger = $logger;
         $this->slowQueryThreshold = 1.0; // 1 second
 
         $host = $_ENV["DB_HOST"] ?? "127.0.0.1";
@@ -61,28 +64,28 @@ class Database
 
         try {
             $this->pdo = new PDO($dsn, $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
         } catch (PDOException $e) {
-            // Log the error message with connection details
-            $this->logger->error(
-                "Database connection failed: " . $e->getMessage()
-            );
+            $this->logger->error("Database connection failed: " . $e->getMessage());
             throw new PDOException("Database connection failed.");
         }
     }
 
     /**
-     * Retrieves the single instance of the Database.
+     * Retrieves the singleton instance of the Database class.
      *
-     * @return Database The Database instance.
+     * @return DatabaseInterface The singleton instance.
      */
-    public static function getInstance(): Database
+    public static function getInstance(): DatabaseInterface
     {
         if (self::$instance === null) {
-            self::$instance = new Database();
+            // Ensure logger is available when creating the instance.
+            $logger = Logger::getInstance();
+            self::$instance = new self($logger);
         }
+
         return self::$instance;
     }
 
@@ -91,10 +94,10 @@ class Database
      *
      * @param string $sql The SQL statement.
      * @param array $params The parameters for the SQL statement.
-     * @return \PDOStatement The resulting PDO statement.
+     * @return PDOStatement The resulting PDO statement.
      * @throws PDOException if the query fails.
      */
-    public function query(string $sql, array $params = []): \PDOStatement
+    public function query(string $sql, array $params = []): PDOStatement
     {
         $startTime = microtime(true);
         try {
@@ -103,49 +106,22 @@ class Database
             $executionTime = microtime(true) - $startTime;
 
             if ($executionTime > $this->slowQueryThreshold) {
-                $this->logger->info(
-                    sprintf(
-                        "Slow Query: %.4f seconds | SQL: %s",
-                        $executionTime,
-                        $this->sanitizeSql($sql)
-                    )
-                );
+                $this->logger->info(sprintf(
+                    "Slow Query: %.4f seconds",
+                    $executionTime
+                ));
             }
 
             return $stmt;
         } catch (PDOException $e) {
-            // Log detailed error information using Logger
-            $originatingFunction =
-                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1][
-                    "function"
-                ] ?? "unknown";
-            $logMessage = sprintf(
-                "Database Query Error in %s: %s | SQL: %s",
+            $originatingFunction = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]["function"] ?? "unknown";
+            $this->logger->error(sprintf(
+                "Database Query Error in %s: %s",
                 $originatingFunction,
-                $e->getMessage(),
-                $this->sanitizeSql($sql)
-            );
-            $this->logger->error($logMessage);
-            throw new PDOException(
-                "An error occurred while executing the database query."
-            );
+                $e->getMessage()
+            ));
+            throw new PDOException("An error occurred while executing the database query.");
         }
-    }
-
-    /**
-     * Sanitizes SQL statements to remove sensitive information.
-     *
-     * @param string $sql The SQL statement.
-     * @return string The sanitized SQL statement.
-     */
-    private function sanitizeSql(string $sql): string
-    {
-        // Remove potential sensitive data such as passwords
-        return preg_replace(
-            "/password_hash\s*=\s*:[a-zA-Z0-9_]+/",
-            "password_hash=***",
-            $sql
-        );
     }
 
     /**

@@ -2,7 +2,50 @@
 
 namespace App\Core;
 
-use App\Core\Application;
+/**
+ * Route class encapsulates individual route details.
+ */
+class Route
+{
+    /**
+     * HTTP method for the route.
+     *
+     * @var string
+     */
+    public string $method;
+
+    /**
+     * URI pattern for the route.
+     *
+     * @var string
+     */
+    public string $pattern;
+
+    /**
+     * Callback associated with the route.
+     *
+     * @var callable|string
+     */
+    public $callback;
+
+    /**
+     * Constructor for the Route class.
+     *
+     * @param string $method HTTP method.
+     * @param string $pattern URI pattern.
+     * @param callable|string $callback Callback function or controller action.
+     */
+    public function __construct(string $method, string $pattern, $callback)
+    {
+        $this->method = strtoupper($method);
+        $this->pattern = "#^" . preg_replace(
+            "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
+            '(?P<$1>[a-zA-Z0-9\-]+)',
+            $pattern
+        ) . '$#';
+        $this->callback = $callback;
+    }
+}
 
 /**
  * Router class handles routing of HTTP requests to appropriate controllers and actions.
@@ -10,19 +53,62 @@ use App\Core\Application;
 class Router
 {
     /**
-     * @var array An array of defined routes.
+     * An array of defined routes.
+     *
+     * @var Route[]
      */
-    protected $routes = [];
+    protected array $routes = [];
 
     /**
-     * @var array An array to store breadcrumb data.
+     * The request instance.
+     *
+     * @var Request
      */
-    protected $breadcrumbs = [];
+    protected Request $request;
+
+    /**
+     * The session instance.
+     *
+     * @var Session
+     */
+    protected Session $session;
+
+    /**
+     * The dependency injection container.
+     *
+     * @var Container
+     */
+    protected Container $container;
+
+    /**
+     * Router constructor.
+     *
+     * @param Request $request
+     * @param Session $session
+     * @param Container $container
+     */
+    public function __construct(Request $request, Session $session, Container $container)
+    {
+        $this->request = $request;
+        $this->session = $session;
+        $this->container = $container;
+    }
+
+    /**
+     * Adds a new route.
+     *
+     * @param string $method HTTP method (GET, POST, etc.).
+     * @param string $path URI path.
+     * @param callable|string $callback Callback function or controller action.
+     * @return void
+     */
+    public function addRoute(string $method, string $path, $callback): void
+    {
+        $this->routes[] = new Route($method, $path, $callback);
+    }
 
     /**
      * Adds a new GET route.
-     *
-     * Supports dynamic routes using placeholders in the format {parameter}.
      *
      * @param string $path
      * @param callable|string $callback
@@ -30,45 +116,35 @@ class Router
      */
     public function get(string $path, $callback): void
     {
-        // Convert route path with placeholders to a regex pattern
-        $routePattern = preg_replace(
-            "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
-            '(?P<$1>[a-zA-Z0-9\-]+)',
-            $path
-        );
-        $routePattern = "#^" . $routePattern . '$#';
-
-        $this->routes["GET"][] = [
-            "pattern" => $routePattern,
-            "callback" => $callback,
-        ];
+        $this->addRoute('GET', $path, $callback);
     }
 
     /**
      * Resolves the current request to a route and executes the corresponding action.
      *
      * @param Request $request
+     * @param Response $response
      * @return string
      * @throws \Exception
      */
-    public function resolve(Request $request): string
+    public function resolve(Request $request, Response $response): string
     {
         $method = $request->getMethod();
         $path = $request->getUri();
 
-        if (!isset($this->routes[$method])) {
-            throw new \Exception("Page not found", 404);
-        }
+        foreach ($this->routes as $route) {
+            if ($route->method !== $method) {
+                continue;
+            }
 
-        foreach ($this->routes[$method] as $route) {
-            if (preg_match($route["pattern"], $path, $matches)) {
+            if (preg_match($route->pattern, $path, $matches)) {
                 $params = array_filter(
                     $matches,
                     "is_string",
                     ARRAY_FILTER_USE_KEY
                 );
 
-                $callback = $route["callback"];
+                $callback = $route->callback;
 
                 if (is_string($callback)) {
                     $parts = explode("@", $callback);
@@ -82,7 +158,8 @@ class Router
                         );
                     }
 
-                    $controller = new $controllerName();
+                    // Use the container to instantiate the controller
+                    $controller = $this->container->make($controllerName);
 
                     if (!method_exists($controller, $action)) {
                         throw new \Exception(
@@ -90,9 +167,6 @@ class Router
                             500
                         );
                     }
-
-                    // Generate breadcrumbs based on the path
-                    $this->generateBreadcrumbs($path);
 
                     // Pass params to the controller action
                     return call_user_func_array(
@@ -142,51 +216,9 @@ class Router
             throw new \Exception("Layout not found", 500);
         }
 
-        // Render the layout with the content embedded and breadcrumbs.
+        // Render the layout with the content embedded.
         ob_start();
         include $layoutPath;
         return ob_get_clean();
-    }
-
-    /**
-     * Generates breadcrumb data based on the current path.
-     *
-     * @param string $path
-     * @return void
-     */
-    protected function generateBreadcrumbs(string $path): void
-    {
-        $segments = explode("/", trim($path, "/"));
-        $basePath = Application::$app->request->getBasePath();
-        $currentPath = $basePath;
-        $this->breadcrumbs = [
-            [
-                "title" => "Home",
-                "path" => $basePath ?: "/",
-            ],
-        ];
-
-        foreach ($segments as $segment) {
-            if ($segment === "") {
-                continue;
-            }
-            $currentPath .= "/" . $segment;
-            // Replace hyphens with spaces and capitalize words for breadcrumb titles
-            $title = ucwords(str_replace("-", " ", $segment));
-            $this->breadcrumbs[] = [
-                "title" => $title,
-                "path" => $currentPath,
-            ];
-        }
-    }
-
-    /**
-     * Retrieves the breadcrumb data.
-     *
-     * @return array
-     */
-    public function getBreadcrumbs(): array
-    {
-        return $this->breadcrumbs;
     }
 }

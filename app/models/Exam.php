@@ -4,6 +4,9 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Validation;
+use App\Core\Database;
+use App\Models\ExamRepository;
 
 /**
  * Exam model represents the `exam` table in the database.
@@ -20,14 +23,23 @@ class Exam extends Model
     protected string $table = "exam";
 
     /**
-     * Finds an exam by its slug.
+     * Validates the Exam model's attributes.
      *
-     * @param string $slug The slug of the exam.
-     * @return Exam|null The found Exam instance or null.
+     * @return array Validation errors, empty if none.
      */
-    public static function findBySlug(string $slug): ?Exam
+    public function validate(): array
     {
-        return self::findBy("slug", $slug);
+        $errors = [];
+
+        if (empty($this->name)) {
+            $errors[] = "Name is required.";
+        }
+
+        if (empty($this->slug) || !Validation::validateSlug($this->slug)) {
+            $errors[] = "Invalid slug.";
+        }
+
+        return $errors;
     }
 
     /**
@@ -38,5 +50,36 @@ class Exam extends Model
     public function getExamSets(): array
     {
         return ExamSet::findAllBy("exam_id", $this->id);
+    }
+
+    /**
+     * Checks if the user has progress in this exam.
+     *
+     * @param int $userId ID of the user.
+     * @return array Contains 'hasProgress' and 'isCompleted' keys.
+     */
+    public function hasUserProgress(int $userId): array
+    {
+        $userProgress = new UserProgress();
+        $userProgress->user_id = $userId;
+        $hasProgress = $userProgress->hasCompletedExam($this->id);
+        $isCompleted = $hasProgress;
+
+        return [
+            'hasProgress' => $hasProgress,
+            'isCompleted' => $isCompleted,
+        ];
+    }
+
+    /**
+     * Retrieves all exam records from the database.
+     *
+     * @return array An array of Exam instances.
+     */
+    public static function findAll(): array
+    {
+        // Instantiate ExamRepository with a DatabaseInterface instance
+        $repository = new ExamRepository(Database::getInstance());
+        return $repository->findAll();
     }
 }

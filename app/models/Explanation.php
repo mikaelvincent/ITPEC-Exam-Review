@@ -37,7 +37,6 @@ class Explanation extends Model
      */
     public function save(): bool
     {
-        // Additional validation can be added here if necessary
         return parent::save();
     }
 

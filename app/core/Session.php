@@ -12,7 +12,7 @@ class Session
      *
      * @return void
      */
-    public static function start(): void
+    public function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -26,9 +26,9 @@ class Session
      * @param mixed $value The value to set.
      * @return void
      */
-    public static function set(string $key, $value): void
+    public function set(string $key, $value): void
     {
-        self::start();
+        $this->start();
         $_SESSION[$key] = $value;
     }
 
@@ -38,9 +38,9 @@ class Session
      * @param string $key The session key.
      * @return mixed|null The value of the session variable or null if not set.
      */
-    public static function get(string $key)
+    public function get(string $key)
     {
-        self::start();
+        $this->start();
         return $_SESSION[$key] ?? null;
     }
 
@@ -50,9 +50,9 @@ class Session
      * @param string $key The session key.
      * @return void
      */
-    public static function unset(string $key): void
+    public function unset(string $key): void
     {
-        self::start();
+        $this->start();
         unset($_SESSION[$key]);
     }
 
@@ -61,7 +61,7 @@ class Session
      *
      * @return void
      */
-    public static function destroy(): void
+    public function destroy(): void
     {
         if (session_status() !== PHP_SESSION_NONE) {
             session_unset();

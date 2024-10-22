@@ -2,8 +2,10 @@
 
 namespace App\Core;
 
+use Throwable;
+
 /**
- * ExceptionHandler class manages uncaught exceptions and errors.
+ * Manages uncaught exceptions and errors, centralizing logging and error handling.
  */
 class ExceptionHandler
 {
@@ -14,86 +16,56 @@ class ExceptionHandler
      */
     public static function register(): void
     {
-        set_exception_handler([self::class, "handleException"]);
-        set_error_handler([self::class, "handleError"]);
+        set_exception_handler([self::class, 'handleException']);
+        set_error_handler([self::class, 'handleError']);
     }
 
     /**
-     * Handles uncaught exceptions.
+     * Handles uncaught exceptions by logging and displaying a generic error page.
      *
-     * @param \Throwable $exception The exception that was thrown.
+     * @param Throwable $exception The exception that was thrown.
      * @return void
      */
-    public static function handleException(\Throwable $exception): void
+    public static function handleException(Throwable $exception): void
     {
-        // Log exception details using Logger
-        $logger = Logger::getInstance();
+        self::logException($exception);
 
-        if (Application::$app !== null) {
-            $request = Application::$app->request;
-            $requestDetails = sprintf(
-                "URI: %s | Method: %s | Query Params: %s",
-                $request->getUri(),
-                $request->getMethod(),
-                json_encode($request->getQueryParams())
-            );
-
-            $logMessage = sprintf(
-                "Exception: %s | Code: %s | File: %s:%s | Trace: %s | %s",
-                $exception->getMessage(),
-                $exception->getCode(),
-                $exception->getFile(),
-                $exception->getLine(),
-                $exception->getTraceAsString(),
-                $requestDetails
-            );
-        } else {
-            $logMessage = sprintf(
-                "Exception: %s | Code: %s | File: %s:%s | Trace: %s",
-                $exception->getMessage(),
-                $exception->getCode(),
-                $exception->getFile(),
-                $exception->getLine(),
-                $exception->getTraceAsString()
-            );
-        }
-
-        $logger->error($logMessage);
-
-        http_response_code($exception->getCode() ?: 500);
-        $errorTitle = self::getErrorTitle($exception->getCode());
+        $code = $exception->getCode();
+        http_response_code($code >= 400 && $code < 600 ? $code : 500);
+        $errorTitle = ErrorHelper::getErrorTitle($code);
 
         $breadcrumbs = [
             [
-                "title" => "Home",
-                "path" => Application::$app->request->getBasePath() ?: "/",
+                'title' => 'Home',
+                'path' => Application::$app->request->getBasePath() ?: '/',
             ],
             [
-                "title" => $errorTitle,
-                "path" => "",
+                'title' => $errorTitle,
+                'path' => '',
             ],
         ];
 
+        $message = 'An unexpected error has occurred. Please try again later.';
+
         echo Application::$app !== null
-            ? Application::$app->router->renderView("_error", [
-                "message" => $exception->getMessage(),
-                "code" => $exception->getCode(),
-                "breadcrumbs" => $breadcrumbs,
-                "errorTitle" => $errorTitle,
+            ? Application::$app->router->renderView('_error', [
+                'message' => $message,
+                'code' => $code,
+                'breadcrumbs' => $breadcrumbs,
+                'errorTitle' => $errorTitle,
             ])
-            : "<h1>" .
-                htmlspecialchars($errorTitle) .
-                "</h1><p>An unexpected error has occurred.</p>";
+            : "<h1>" . htmlspecialchars($errorTitle) . "</h1><p>{$message}</p>";
     }
 
     /**
-     * Handles PHP errors.
+     * Handles PHP errors by converting them to exceptions without exposing details.
      *
      * @param int $errno The level of the error raised.
      * @param string $errstr The error message.
      * @param string $errfile The filename that the error was raised in.
      * @param int $errline The line number the error was raised at.
      * @return bool Always returns true to prevent PHP internal error handler.
+     * @throws \ErrorException
      */
     public static function handleError(
         int $errno,
@@ -101,46 +73,44 @@ class ExceptionHandler
         string $errfile,
         int $errline
     ): bool {
-        // Log error details using Logger
-        $logger = Logger::getInstance();
+        $exception = new \ErrorException('An internal error occurred.', 0, $errno, $errfile, $errline);
+        self::logException($exception);
+        throw $exception;
+    }
 
-        if (Application::$app !== null) {
+    /**
+     * Logs exception details using the Logger.
+     *
+     * @param Throwable $exception The exception to log.
+     * @return void
+     */
+    protected static function logException(Throwable $exception): void
+    {
+        $logger = Logger::getInstance();
+        $requestDetails = '';
+
+        if (isset(Application::$app->request)) {
             $request = Application::$app->request;
             $requestDetails = sprintf(
-                "URI: %s | Method: %s | Query Params: %s",
+                'URI: %s | Method: %s | Query Params: %s',
                 $request->getUri(),
                 $request->getMethod(),
                 json_encode($request->getQueryParams())
             );
-
-            $logMessage = sprintf(
-                "Error [{$errno}]: {$errstr} in {$errfile}:{$errline} | {$requestDetails}"
-            );
         } else {
-            $logMessage = sprintf(
-                "Error [{$errno}]: {$errstr} in {$errfile}:{$errline}"
-            );
+            $requestDetails = 'Request details not available.';
         }
 
+        $logMessage = sprintf(
+            'Exception: %s | Code: %s | File: %s:%s | Trace: %s | %s',
+            $exception->getMessage(),
+            $exception->getCode(),
+            $exception->getFile(),
+            $exception->getLine(),
+            $exception->getTraceAsString(),
+            $requestDetails
+        );
+
         $logger->error($logMessage);
-
-        throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
-    }
-
-    /**
-     * Retrieves a human-readable error title based on the status code.
-     *
-     * @param int $code
-     * @return string
-     */
-    protected static function getErrorTitle(int $code): string
-    {
-        $titles = [
-            404 => "404 Not Found",
-            500 => "500 Internal Server Error",
-            401 => "401 Unauthorized",
-        ];
-
-        return $titles[$code] ?? "Error";
     }
 }
