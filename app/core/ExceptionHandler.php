@@ -89,7 +89,7 @@ class ExceptionHandler
         $logger = Logger::getInstance();
         $requestDetails = '';
 
-        if (Application::$app !== null) {
+        if (isset(Application::$app->request)) {
             $request = Application::$app->request;
             $requestDetails = sprintf(
                 'URI: %s | Method: %s | Query Params: %s',
@@ -97,6 +97,8 @@ class ExceptionHandler
                 $request->getMethod(),
                 json_encode($request->getQueryParams())
             );
+        } else {
+            $requestDetails = 'Request details not available.';
         }
 
         $logMessage = sprintf(
