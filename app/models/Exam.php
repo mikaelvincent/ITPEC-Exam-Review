@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Model;
 use App\Core\Traits\Relationships;
 use App\Core\Validation;
+use App\Core\Database;
 use App\Models\ExamRepository;
 
 /**
@@ -77,7 +78,8 @@ class Exam extends Model
      */
     public static function findAll(): array
     {
-        $repository = new ExamRepository();
+        // Instantiate ExamRepository with a DatabaseInterface instance
+        $repository = new ExamRepository(Database::getInstance());
         return $repository->findAll();
     }
 }
