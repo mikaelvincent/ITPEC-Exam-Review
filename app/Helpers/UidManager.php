@@ -131,4 +131,32 @@ class UidManager
 
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
+
+    /**
+     * Validates if a given UID is a valid UUID format.
+     *
+     * @param string $uid The UID to validate.
+     * @return bool True if valid, false otherwise.
+     */
+    protected function isValidUid(string $uid): bool
+    {
+        return (bool) preg_match('/^[a-f0-9\-]{36}$/', $uid);
+    }
+
+    /**
+     * Refreshes the UID cookie by resetting its expiration.
+     *
+     * @param string $uid The UID to set in the cookie.
+     * @return void
+     */
+    protected function refreshUidCookie(string $uid): void
+    {
+        Cookie::set($this->uidCookieName, $uid, [
+            'expires' => time() + $this->cookieExpiry,
+            'path' => '/',
+            'secure' => isset($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
 }
