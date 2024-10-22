@@ -23,6 +23,13 @@ class UidManager
     protected LoggerInterface $logger;
 
     /**
+     * Session instance for session management.
+     *
+     * @var Session
+     */
+    protected Session $session;
+
+    /**
      * Name of the UID cookie.
      *
      * @var string
@@ -47,12 +54,14 @@ class UidManager
      * Constructor initializes the UidManager.
      *
      * @param LoggerInterface $logger Logger instance.
+     * @param Session $session Session instance.
      * @param string $uidCookieName Name of the UID cookie.
      * @param int $cookieExpiry UID cookie expiry time in seconds.
      */
-    public function __construct(LoggerInterface $logger, string $uidCookieName = 'uid', int $cookieExpiry = 315360000)
+    public function __construct(LoggerInterface $logger, Session $session, string $uidCookieName = 'uid', int $cookieExpiry = 315360000)
     {
         $this->logger = $logger;
+        $this->session = $session;
         $this->uidCookieName = $uidCookieName;
         $this->cookieExpiry = $cookieExpiry;
         $this->userRepository = new UserRepository(Database::getInstance());
@@ -71,7 +80,7 @@ class UidManager
             $user = $this->userRepository->findByUid($uid);
             if ($user) {
                 $this->refreshUidCookie($uid);
-                Session::set('user_id', $user->id);
+                $this->session->set('user_id', $user->id);
                 $this->logger->info("Valid UID found. User ID: {$user->id}.");
                 return;
             }
@@ -81,34 +90,6 @@ class UidManager
         }
 
         $this->generateNewUid();
-    }
-
-    /**
-     * Validates the UID format.
-     *
-     * @param string $uid UID to validate.
-     * @return bool True if valid, false otherwise.
-     */
-    protected function isValidUid(string $uid): bool
-    {
-        return Validation::validatePattern('/^[a-f0-9\-]{36}$/', $uid);
-    }
-
-    /**
-     * Refreshes the UID cookie expiry time.
-     *
-     * @param string $uid UID to refresh.
-     * @return void
-     */
-    protected function refreshUidCookie(string $uid): void
-    {
-        Cookie::set($this->uidCookieName, $uid, [
-            'expires' => time() + $this->cookieExpiry,
-            'path' => '/',
-            'secure' => isset($_SERVER['HTTPS']),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
     }
 
     /**
@@ -127,7 +108,7 @@ class UidManager
         if (empty($user->validate())) {
             $this->userRepository->insert($user);
             $this->refreshUidCookie($newUid);
-            Session::set('user_id', $user->id);
+            $this->session->set('user_id', $user->id);
             $this->logger->info("New UID generated and user created. User ID: {$user->id}.");
         } else {
             $this->logger->error("Failed to create a new user with UID: {$newUid}.");

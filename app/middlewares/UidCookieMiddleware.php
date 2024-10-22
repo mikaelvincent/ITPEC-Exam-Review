@@ -6,6 +6,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Helpers\UidManager;
 use App\Core\Logger;
+use App\Core\Application;
 
 /**
  * UidCookieMiddleware manages UID cookies for unregistered users.
@@ -26,7 +27,8 @@ class UidCookieMiddleware
         $uidCookieName = 'uid';
         $cookieExpiry = (int) ($_ENV['UID_COOKIE_EXPIRY'] ?? 315360000); // Default to 10 years
 
-        $uidManager = new UidManager($logger, $uidCookieName, $cookieExpiry);
+        $session = Application::$app->session;
+        $uidManager = new UidManager($logger, $session, $uidCookieName, $cookieExpiry);
         $uidManager->handleUid();
 
         // Proceed to the next middleware or controller

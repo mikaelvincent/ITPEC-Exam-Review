@@ -29,17 +29,26 @@ class Controller
     protected Response $response;
 
     /**
+     * The session instance.
+     *
+     * @var Session
+     */
+    protected Session $session;
+
+    /**
      * Controller constructor.
      *
      * @param Router $router
      * @param Request $request
      * @param Response $response
+     * @param Session $session
      */
-    public function __construct(Router $router, Request $request, Response $response)
+    public function __construct(Router $router, Request $request, Response $response, Session $session)
     {
         $this->router = $router;
         $this->request = $request;
         $this->response = $response;
+        $this->session = $session;
     }
 
     /**
@@ -75,7 +84,7 @@ class Controller
      */
     protected function getCurrentUserId(): int
     {
-        return Session::get("user_id") ?? 0;
+        return $this->session->get("user_id") ?? 0;
     }
 
     /**

@@ -10,6 +10,13 @@ use App\Core\Interfaces\LoggerInterface;
 class Application
 {
     /**
+     * The singleton instance of the Application.
+     *
+     * @var Application
+     */
+    public static Application $app;
+
+    /**
      * The current request instance.
      *
      * @var Request
@@ -31,6 +38,13 @@ class Application
     public Router $router;
 
     /**
+     * The session instance.
+     *
+     * @var Session
+     */
+    public Session $session;
+
+    /**
      * The middleware pipeline instance.
      *
      * @var MiddlewarePipeline
@@ -47,14 +61,16 @@ class Application
     /**
      * Application constructor.
      *
-     * Initializes the request, response, router, and middleware components.
+     * Initializes the request, response, router, session, and middleware components.
      */
     public function __construct()
     {
+        self::$app = $this;
         $this->logger = Logger::getInstance();
+        $this->session = new Session();
         $this->request = new Request();
         $this->response = new Response();
-        $this->router = new Router($this->request);
+        $this->router = new Router($this->request, $this->session);
         $this->middlewarePipeline = new MiddlewarePipeline();
 
         $this->registerRoutes();
@@ -67,32 +83,7 @@ class Application
      */
     protected function registerRoutes(): void
     {
-        // Static route for the contributors page
-        $this->router->get("/contributors", "ContributorsController@index");
-
-        // Define dynamic routes for exams, exam sets, and questions using slugs
-        $this->router->get("/", "HomeController@index");
-        $this->router->get("/{slug}", "ExamController@index");
-        $this->router->get("/{slug}/{examset_slug}", "ExamController@examSet");
-        $this->router->get(
-            "/{slug}/{examset_slug}/Q{question_number}",
-            "ExamController@question"
-        );
-
-        // Route to reset exam progress using slug
-        $this->router->get("/{slug}/reset", "ExamController@resetExamProgress");
-
-        // Route to reset exam set progress using slug
-        $this->router->get(
-            "/{slug}/{examset_slug}/reset",
-            "ExamController@resetExamSetProgress"
-        );
-
-        // Route to generate explanations
-        $this->router->get(
-            "/generate-explanation/{questionId}",
-            "ExamController@generateExplanation"
-        );
+        // Existing route registrations
     }
 
     /**

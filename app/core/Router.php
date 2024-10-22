@@ -29,19 +29,26 @@ class Router
     protected Request $request;
 
     /**
+     * The session instance.
+     *
+     * @var Session
+     */
+    protected Session $session;
+
+    /**
      * Router constructor.
      *
      * @param Request $request
+     * @param Session $session
      */
-    public function __construct(Request $request)
+    public function __construct(Request $request, Session $session)
     {
         $this->request = $request;
+        $this->session = $session;
     }
 
     /**
      * Adds a new GET route.
-     *
-     * Supports dynamic routes using placeholders in the format {parameter}.
      *
      * @param string $path
      * @param callable|string $callback
@@ -105,7 +112,7 @@ class Router
                     $this->generateBreadcrumbs($path);
 
                     // Instantiate the controller with dependencies
-                    $controller = new $controllerName($this, $request, $response);
+                    $controller = new $controllerName($this, $request, $response, $this->session);
 
                     if (!method_exists($controller, $action)) {
                         throw new \Exception(
