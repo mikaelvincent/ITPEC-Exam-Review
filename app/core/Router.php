@@ -60,13 +60,6 @@ class Router
     protected array $routes = [];
 
     /**
-     * An array to store breadcrumb data.
-     *
-     * @var array
-     */
-    protected array $breadcrumbs = [];
-
-    /**
      * The request instance.
      *
      * @var Request
@@ -165,9 +158,6 @@ class Router
                         );
                     }
 
-                    // Generate breadcrumbs based on the path
-                    $this->generateBreadcrumbs($path);
-
                     // Use the container to instantiate the controller
                     $controller = $this->container->make($controllerName);
 
@@ -226,50 +216,9 @@ class Router
             throw new \Exception("Layout not found", 500);
         }
 
-        // Render the layout with the content embedded and breadcrumbs.
+        // Render the layout with the content embedded.
         ob_start();
         include $layoutPath;
         return ob_get_clean();
-    }
-
-    /**
-     * Generates breadcrumb data based on the current path.
-     *
-     * @param string $path
-     * @return void
-     */
-    protected function generateBreadcrumbs(string $path): void
-    {
-        $segments = explode("/", trim($path, "/"));
-        $basePath = $this->request->getBasePath();
-        $currentPath = $basePath;
-        $this->breadcrumbs = [
-            [
-                "title" => "Home",
-                "path" => $basePath ?: "/",
-            ],
-        ];
-
-        foreach ($segments as $segment) {
-            if ($segment === "") {
-                continue;
-            }
-            $currentPath .= "/" . $segment;
-            $title = ucwords(str_replace("-", " ", $segment));
-            $this->breadcrumbs[] = [
-                "title" => $title,
-                "path" => $currentPath,
-            ];
-        }
-    }
-
-    /**
-     * Retrieves the breadcrumb data.
-     *
-     * @return array
-     */
-    public function getBreadcrumbs(): array
-    {
-        return $this->breadcrumbs;
     }
 }
