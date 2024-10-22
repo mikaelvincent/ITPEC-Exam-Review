@@ -6,14 +6,14 @@ $title = htmlspecialchars($exam_set->name) . " | ITPEC Exam Review"; ?>
         <div class="col">
             <?php
             // Determine the button class based on progress or availability
-            $buttonClass = $question['completed'] ? "btn-success" : "btn-secondary";
-            $disabled = $question['completed'] ? "" : "disabled";
+            $buttonClass = "btn-secondary";
+            $disabled = "";
 
             // Generate the URL for this question as {exam_slug}/{exam_set_slug}/question/{question_number}
-            $questionUrl = "{$exam_slug}/{$exam_set->slug}/question/{$question['question_number']}";
+            $questionUrl = "{$exam_set->slug}/Q{$question->question_number}";
             ?>
             <a class="btn <?= $buttonClass ?> <?= $disabled ?> btn-lg w-100" role="button" href="<?= $questionUrl ?>">
-                <?= "Q" . htmlspecialchars($question['question_number']) ?>
+                <?= "Q" . htmlspecialchars($question->question_number) ?>
             </a>
         </div>
     <?php endforeach; ?>
