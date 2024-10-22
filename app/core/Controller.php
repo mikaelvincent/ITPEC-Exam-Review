@@ -8,13 +8,6 @@ namespace App\Core;
 class Controller
 {
     /**
-     * The router instance.
-     *
-     * @var Router
-     */
-    protected Router $router;
-
-    /**
      * The request instance.
      *
      * @var Request
@@ -36,19 +29,26 @@ class Controller
     protected Session $session;
 
     /**
+     * The router instance.
+     *
+     * @var Router
+     */
+    protected Router $router;
+
+    /**
      * Controller constructor.
      *
-     * @param Router $router
      * @param Request $request
      * @param Response $response
      * @param Session $session
+     * @param Router $router
      */
-    public function __construct(Router $router, Request $request, Response $response, Session $session)
+    public function __construct(Request $request, Response $response, Session $session, Router $router)
     {
-        $this->router = $router;
         $this->request = $request;
         $this->response = $response;
         $this->session = $session;
+        $this->router = $router;
     }
 
     /**

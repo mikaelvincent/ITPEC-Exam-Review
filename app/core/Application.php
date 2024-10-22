@@ -59,18 +59,44 @@ class Application
     public LoggerInterface $logger;
 
     /**
+     * The dependency injection container.
+     *
+     * @var Container
+     */
+    public Container $container;
+
+    /**
      * Application constructor.
      *
-     * Initializes the request, response, router, session, and middleware components.
+     * Initializes the container and core components.
      */
     public function __construct()
     {
         self::$app = $this;
-        $this->logger = Logger::getInstance();
-        $this->session = new Session();
-        $this->request = new Request();
-        $this->response = new Response();
-        $this->router = new Router($this->request, $this->session);
+
+        // Initialize the container
+        $this->container = new Container();
+
+        // Bind core services
+        $this->container->bind(LoggerInterface::class, Logger::class);
+        $this->container->bind(Session::class);
+        $this->container->bind(Request::class);
+        $this->container->bind(Response::class);
+        $this->container->bind(Router::class, function ($container) {
+            return new Router(
+                $container->make(Request::class),
+                $container->make(Session::class),
+                $container
+            );
+        });
+
+        // Resolve core services
+        $this->logger = $this->container->make(LoggerInterface::class);
+        $this->session = $this->container->make(Session::class);
+        $this->request = $this->container->make(Request::class);
+        $this->response = $this->container->make(Response::class);
+        $this->router = $this->container->make(Router::class);
+
         $this->middlewarePipeline = new MiddlewarePipeline();
 
         $this->registerRoutes();

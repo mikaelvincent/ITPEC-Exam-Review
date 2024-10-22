@@ -36,15 +36,24 @@ class Router
     protected Session $session;
 
     /**
+     * The dependency injection container.
+     *
+     * @var Container
+     */
+    protected Container $container;
+
+    /**
      * Router constructor.
      *
      * @param Request $request
      * @param Session $session
+     * @param Container $container
      */
-    public function __construct(Request $request, Session $session)
+    public function __construct(Request $request, Session $session, Container $container)
     {
         $this->request = $request;
         $this->session = $session;
+        $this->container = $container;
     }
 
     /**
@@ -111,8 +120,8 @@ class Router
                     // Generate breadcrumbs based on the path
                     $this->generateBreadcrumbs($path);
 
-                    // Instantiate the controller with dependencies
-                    $controller = new $controllerName($this, $request, $response, $this->session);
+                    // Use the container to instantiate the controller
+                    $controller = $this->container->make($controllerName);
 
                     if (!method_exists($controller, $action)) {
                         throw new \Exception(
