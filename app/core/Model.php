@@ -225,28 +225,55 @@ abstract class Model
             return false;
         }
 
-        $attributes = $this->getAttributes();
         $primaryKeyValue = $this->attributes[$this->primaryKey] ?? null;
 
         if ($primaryKeyValue !== null) {
-            // Update existing record
-            $setClause = implode(", ", array_map(fn($col) => "{$col} = :{$col}", array_keys($attributes)));
-            $sql = "UPDATE {$this->table} SET {$setClause} WHERE {$this->primaryKey} = :{$this->primaryKey}";
+            return $this->update();
         } else {
-            // Insert new record
-            $columns = implode(", ", array_keys($attributes));
-            $params = implode(", ", array_map(fn($col) => ":{$col}", array_keys($attributes)));
-            $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$params})";
+            return $this->insert();
         }
+    }
+
+    /**
+     * Inserts a new record into the database.
+     *
+     * @return bool True on success, false otherwise.
+     */
+    protected function insert(): bool
+    {
+        $attributes = $this->getAttributes();
+
+        $columns = implode(", ", array_keys($attributes));
+        $params = implode(", ", array_map(fn($col) => ":{$col}", array_keys($attributes)));
+        $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$params})";
 
         try {
             $this->db->execute($sql, $attributes);
-            if ($primaryKeyValue === null) {
-                $this->attributes[$this->primaryKey] = (int) $this->db->getLastInsertId();
-            }
+            $this->attributes[$this->primaryKey] = (int) $this->db->getLastInsertId();
             return true;
         } catch (\PDOException $e) {
-            $this->logger->error("Database Error on saving model: " . $e->getMessage());
+            $this->logger->error("Database Error on inserting model: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Updates an existing record in the database.
+     *
+     * @return bool True on success, false otherwise.
+     */
+    protected function update(): bool
+    {
+        $attributes = $this->getAttributes();
+
+        $setClause = implode(", ", array_map(fn($col) => "{$col} = :{$col}", array_keys($attributes)));
+        $sql = "UPDATE {$this->table} SET {$setClause} WHERE {$this->primaryKey} = :{$this->primaryKey}";
+
+        try {
+            $this->db->execute($sql, $attributes);
+            return true;
+        } catch (\PDOException $e) {
+            $this->logger->error("Database Error on updating model: " . $e->getMessage());
             return false;
         }
     }
