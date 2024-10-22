@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Model;
 use App\Core\Traits\Relationships;
 use App\Core\Validation;
+use App\Models\ExamRepository;
 
 /**
  * Exam model represents the `exam` table in the database.
@@ -67,5 +68,16 @@ class Exam extends Model
             'hasProgress' => $hasProgress,
             'isCompleted' => $isCompleted,
         ];
+    }
+
+    /**
+     * Retrieves all exam records from the database.
+     *
+     * @return array An array of Exam instances.
+     */
+    public static function findAll(): array
+    {
+        $repository = new ExamRepository();
+        return $repository->findAll();
     }
 }
