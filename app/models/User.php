@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Core\Model;
-use App\Core\Traits\Relationships;
 use App\Core\Validation;
 
 /**
@@ -11,15 +10,6 @@ use App\Core\Validation;
  */
 class User extends Model
 {
-    use Relationships;
-
-    /**
-     * The table associated with the User model.
-     *
-     * @var string
-     */
-    protected string $table = "user";
-
     /**
      * Validates user attributes.
      *
@@ -39,26 +29,5 @@ class User extends Model
         }
 
         return $errors;
-    }
-
-    /**
-     * Finds a user by their UID.
-     *
-     * @param string $uid UID to search for.
-     * @return User|null User instance or null if not found.
-     */
-    public static function findByUid(string $uid): ?User
-    {
-        return self::findBy("uid", $uid);
-    }
-
-    /**
-     * Retrieves progress records associated with the user.
-     *
-     * @return array Array of UserProgress instances.
-     */
-    public function getProgress(): array
-    {
-        return $this->getRelatedModels(UserProgress::class, "user_id");
     }
 }

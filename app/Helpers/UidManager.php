@@ -6,7 +6,9 @@ use App\Core\Session;
 use App\Core\Cookie;
 use App\Core\Validation;
 use App\Models\User;
+use App\Models\UserRepository;
 use App\Core\Interfaces\LoggerInterface;
+use App\Core\Database;
 
 /**
  * UidManager handles UID generation, validation, and cookie management.
@@ -35,6 +37,13 @@ class UidManager
     protected int $cookieExpiry;
 
     /**
+     * UserRepository instance.
+     *
+     * @var UserRepository
+     */
+    protected UserRepository $userRepository;
+
+    /**
      * Constructor initializes the UidManager.
      *
      * @param LoggerInterface $logger Logger instance.
@@ -46,6 +55,7 @@ class UidManager
         $this->logger = $logger;
         $this->uidCookieName = $uidCookieName;
         $this->cookieExpiry = $cookieExpiry;
+        $this->userRepository = new UserRepository(Database::getInstance());
     }
 
     /**
@@ -58,7 +68,7 @@ class UidManager
         $uid = Cookie::get($this->uidCookieName);
 
         if ($uid && $this->isValidUid($uid)) {
-            $user = User::findByUid($uid);
+            $user = $this->userRepository->findByUid($uid);
             if ($user) {
                 $this->refreshUidCookie($uid);
                 Session::set('user_id', $user->id);
@@ -114,7 +124,8 @@ class UidManager
 
         $user = new User();
         $user->uid = $newUid;
-        if ($user->save()) {
+        if (empty($user->validate())) {
+            $this->userRepository->insert($user);
             $this->refreshUidCookie($newUid);
             Session::set('user_id', $user->id);
             $this->logger->info("New UID generated and user created. User ID: {$user->id}.");
@@ -131,7 +142,6 @@ class UidManager
     protected function generateUuidV4(): string
     {
         $data = random_bytes(16);
-        assert(strlen($data) === 16);
 
         // Set version to 0100
         $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
