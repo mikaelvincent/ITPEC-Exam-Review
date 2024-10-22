@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Database;
 use App\Core\Validation;
 
 /**
@@ -62,5 +63,32 @@ class ExamSet extends Model
     public function getQuestions(): array
     {
         return Question::findAllBy("exam_set_id", $this->id);
+    }
+
+    /**
+     * Retrieves all exam sets associated with the given column and value.
+     *
+     * @param string $column Column name for filtering.
+     * @param mixed $value Value to match the column.
+     * @return array An array of ExamSet instances.
+     */
+    public static function findAllBy(string $column, $value): array
+    {
+        if (!in_array($column, ['exam_id', 'name', 'slug'], true)) {
+            throw new \InvalidArgumentException("Invalid column: $column");
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM examset WHERE {$column} = :value";
+        $rows = $db->fetchAll($sql, ['value' => $value]);
+
+        $examSets = [];
+        foreach ($rows as $row) {
+            $examSet = new self();
+            $examSet->setAttributes($row);
+            $examSets[] = $examSet;
+        }
+
+        return $examSets;
     }
 }
