@@ -29,22 +29,27 @@ class HomeController extends Controller
                     "name" => $exam->name,
                     "slug" => $exam->slug,
                     "status" => "disabled",
+                    "has_exam_sets" => false,
                 ];
                 continue;
             }
 
-            $allSetsCompleted = true;
-            foreach ($examSets as $set) {
-                if (!UserProgress::hasCompletedExamSet($userId, $set->id)) {
-                    $allSetsCompleted = false;
-                    break;
-                }
+            $hasProgress = UserProgress::hasCompletedExam($userId, $exam->id);
+            $isCompleted = $hasProgress;
+
+            if ($isCompleted) {
+                $status = "completed";
+            } elseif ($hasProgress) {
+                $status = "in_progress";
+            } else {
+                $status = "available";
             }
 
             $examsData[] = [
                 "name" => $exam->name,
                 "slug" => $exam->slug,
-                "status" => $allSetsCompleted ? "completed" : "available",
+                "status" => $status,
+                "has_exam_sets" => true,
             ];
         }
 

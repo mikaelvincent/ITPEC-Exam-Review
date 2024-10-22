@@ -4,18 +4,24 @@ $title = "Home | ITPEC Exam Review"; ?>
     <?php foreach ($exams_data as $exam): ?>
         <div class="col">
             <?php
-            $buttonClass = "btn-primary";
+            $buttonClass = "btn-secondary";
             $disabled = "";
             $href = htmlspecialchars($exam["slug"]);
-            if ($exam["status"] === "completed") {
-                $buttonClass = "btn-success";
-                $disabled = "disabled";
-            } elseif ($exam["status"] === "disabled") {
+
+            if ($exam["has_exam_sets"]) {
+                if ($exam["status"] === "completed") {
+                    $buttonClass = "btn-success";
+                } elseif ($exam["status"] === "in_progress") {
+                    $buttonClass = "btn-outline-primary";
+                } else { // available
+                    $buttonClass = "btn-primary";
+                }
+            } else {
                 $buttonClass = "btn-secondary";
                 $disabled = "disabled";
             }
             ?>
-            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="<?= $href ?>" <?= $disabled ?>>
+            <a class="btn <?= $buttonClass ?> <?= $disabled ?> btn-lg w-100" role="button" href="<?= $href ?>">
                 <?= htmlspecialchars($exam["name"]) ?>
             </a>
         </div>
