@@ -51,14 +51,15 @@ class ExamController extends Controller
             return $this->renderError("Exam not found.");
         }
 
-        $userProgress = UserProgress::getProgressForExamBySlug(
-            $this->getCurrentUserId(),
-            $examSlug
-        );
+        // Fetch all exam sets for the exam
+        $examSets = $exam->getExamSets();
+        if (empty($examSets)) {
+            return $this->renderError("No exam sets available for this exam.");
+        }
 
         return $this->render("exam/index", [
             "exam" => $exam,
-            "user_progress" => $userProgress,
+            "exam_sets" => $examSets,
         ]);
     }
 

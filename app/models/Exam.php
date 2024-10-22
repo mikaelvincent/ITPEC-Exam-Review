@@ -82,4 +82,20 @@ class Exam extends Model
         $repository = new ExamRepository(Database::getInstance());
         return $repository->findAll();
     }
+
+    /**
+     * Finds an exam by validated slug.
+     *
+     * @param string $slug The slug to validate and search for.
+     * @return Exam|null The found exam instance or null if not found.
+     */
+    public static function findByValidatedSlug(string $slug): ?Exam
+    {
+        if (!Validation::validateSlug($slug)) {
+            return null;
+        }
+
+        $repository = new ExamRepository(Database::getInstance());
+        return $repository->findBy('slug', $slug);
+    }
 }
