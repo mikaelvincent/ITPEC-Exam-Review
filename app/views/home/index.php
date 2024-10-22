@@ -14,7 +14,7 @@ $title = "Home | ITPEC Exam Review"; ?>
                 } elseif ($exam["status"] === "in_progress") {
                     $buttonClass = "btn-outline-primary";
                 } else { // available
-                    $buttonClass = "btn-primary";
+                    $buttonClass = "btn-secondary";
                 }
             } else {
                 $buttonClass = "btn-secondary";

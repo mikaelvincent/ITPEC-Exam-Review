@@ -1,6 +1,7 @@
 # Environment files
 config/.env
 
+# Logs
 logs
 
 # Mapper files
@@ -9,3 +10,6 @@ logs
 .mapheader
 .mapignore
 .mapomit
+
+# Sample data
+database/seed.sql
