@@ -30,6 +30,16 @@ class UserRepository extends Repository
     }
 
     /**
+     * Sets the list of allowed columns for querying.
+     *
+     * @return void
+     */
+    protected function setAllowedColumns(): void
+    {
+        $this->allowedColumns = ['id', 'uid', 'username', 'display_name', 'password_hash', 'created_at', 'updated_at'];
+    }
+
+    /**
      * Finds a user by UID.
      *
      * @param string $uid

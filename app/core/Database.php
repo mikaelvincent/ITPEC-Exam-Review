@@ -57,7 +57,7 @@ class Database implements DatabaseInterface
 
         try {
             $this->pdo = new PDO($dsn, $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
         } catch (PDOException $e) {
@@ -84,35 +84,21 @@ class Database implements DatabaseInterface
 
             if ($executionTime > $this->slowQueryThreshold) {
                 $this->logger->info(sprintf(
-                    "Slow Query: %.4f seconds | SQL: %s",
-                    $executionTime,
-                    $this->sanitizeSql($sql)
+                    "Slow Query: %.4f seconds",
+                    $executionTime
                 ));
             }
 
             return $stmt;
         } catch (PDOException $e) {
             $originatingFunction = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]["function"] ?? "unknown";
-            $logMessage = sprintf(
-                "Database Query Error in %s: %s | SQL: %s",
+            $this->logger->error(sprintf(
+                "Database Query Error in %s: %s",
                 $originatingFunction,
-                $e->getMessage(),
-                $this->sanitizeSql($sql)
-            );
-            $this->logger->error($logMessage);
+                $e->getMessage()
+            ));
             throw new PDOException("An error occurred while executing the database query.");
         }
-    }
-
-    /**
-     * Sanitizes SQL statements to remove sensitive information.
-     *
-     * @param string $sql The SQL statement.
-     * @return string The sanitized SQL statement.
-     */
-    private function sanitizeSql(string $sql): string
-    {
-        return preg_replace("/password_hash\s*=\s*:[a-zA-Z0-9_]+/", "password_hash=***", $sql);
     }
 
     /**

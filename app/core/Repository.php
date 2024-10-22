@@ -38,6 +38,13 @@ abstract class Repository
     protected string $primaryKey = 'id';
 
     /**
+     * List of allowed columns for querying.
+     *
+     * @var array
+     */
+    protected array $allowedColumns = [];
+
+    /**
      * Repository constructor.
      *
      * @param DatabaseInterface $db
@@ -47,6 +54,7 @@ abstract class Repository
         $this->db = $db;
         $this->setModelClass();
         $this->setTable();
+        $this->setAllowedColumns();
     }
 
     /**
@@ -62,6 +70,13 @@ abstract class Repository
      * @return void
      */
     abstract protected function setTable(): void;
+
+    /**
+     * Sets the list of allowed columns for querying.
+     *
+     * @return void
+     */
+    abstract protected function setAllowedColumns(): void;
 
     /**
      * Finds a record by primary key.
@@ -86,6 +101,9 @@ abstract class Repository
      */
     public function findBy(string $column, $value): ?Model
     {
+        if (!in_array($column, $this->allowedColumns, true)) {
+            throw new \InvalidArgumentException("Invalid column name: $column");
+        }
         $sql = "SELECT * FROM {$this->table} WHERE {$column} = :value LIMIT 1";
         $data = $this->db->fetch($sql, ['value' => $value]);
 
@@ -114,6 +132,9 @@ abstract class Repository
      */
     public function findAllBy(string $column, $value): array
     {
+        if (!in_array($column, $this->allowedColumns, true)) {
+            throw new \InvalidArgumentException("Invalid column name: $column");
+        }
         $sql = "SELECT * FROM {$this->table} WHERE {$column} = :value";
         $rows = $this->db->fetchAll($sql, ['value' => $value]);
 
