@@ -15,6 +15,13 @@ class Container
     protected array $bindings = [];
 
     /**
+     * The container's singleton instances.
+     *
+     * @var array
+     */
+    protected array $singletons = [];
+
+    /**
      * Binds a class or interface to a concrete implementation or closure.
      *
      * @param string $abstract
@@ -30,6 +37,18 @@ class Container
     }
 
     /**
+     * Binds a singleton instance to the container.
+     *
+     * @param string $abstract
+     * @param mixed $instance
+     * @return void
+     */
+    public function bindSingleton(string $abstract, $instance): void
+    {
+        $this->singletons[$abstract] = $instance;
+    }
+
+    /**
      * Resolves and returns an instance of the given class or interface.
      *
      * @param string $abstract
@@ -38,6 +57,10 @@ class Container
      */
     public function make(string $abstract)
     {
+        if (isset($this->singletons[$abstract])) {
+            return $this->singletons[$abstract];  // Return singleton instance if available
+        }
+
         if (isset($this->bindings[$abstract])) {
             $concrete = $this->bindings[$abstract];
 

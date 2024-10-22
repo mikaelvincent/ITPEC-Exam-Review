@@ -78,7 +78,7 @@ class Application
         $this->container = new Container();
 
         // Bind core services
-        $this->container->bind(LoggerInterface::class, Logger::class);
+        $this->container->bindSingleton(LoggerInterface::class, Logger::getInstance());  // Modified for Singleton
         $this->container->bind(Session::class);
         $this->container->bind(Request::class);
         $this->container->bind(Response::class);
@@ -93,7 +93,7 @@ class Application
         // Resolve core services
         $this->logger = $this->container->make(LoggerInterface::class);
         $this->session = $this->container->make(Session::class);
-        $this->request = $this->container->make(Request::class);
+        $this->request = $this->container->make(Request::class);  // Ensure request is initialized
         $this->response = $this->container->make(Response::class);
         $this->router = $this->container->make(Router::class);
 
