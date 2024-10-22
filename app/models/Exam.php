@@ -28,4 +28,23 @@ class Exam extends Model
     {
         return ExamSet::findAllBy("exam_id", $this->id);
     }
+
+    /**
+     * Checks if the user has progress in this exam.
+     *
+     * @param int $userId ID of the user.
+     * @return array Contains 'hasProgress' and 'isCompleted' keys.
+     */
+    public function hasUserProgress(int $userId): array
+    {
+        $userProgress = new UserProgress();
+        $userProgress->user_id = $userId;
+        $hasProgress = $userProgress->hasCompletedExam($this->id);
+        $isCompleted = $hasProgress;
+
+        return [
+            'hasProgress' => $hasProgress,
+            'isCompleted' => $isCompleted,
+        ];
+    }
 }

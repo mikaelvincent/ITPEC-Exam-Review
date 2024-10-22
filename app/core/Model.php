@@ -2,13 +2,15 @@
 
 namespace App\Core;
 
-use PDOException;
+use App\Core\Traits\ModelUtilities;
 
 /**
  * Abstract base class for all models, providing common database interactions.
  */
 abstract class Model
 {
+    use ModelUtilities;
+
     /**
      * Primary key field name.
      *

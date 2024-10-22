@@ -24,13 +24,11 @@ class ExamController extends Controller
     {
         $examSlug = $params["slug"] ?? "unknown-exam";
 
-        // Fetch exam by validated slug
         $exam = Exam::findByValidatedSlug($examSlug);
         if (!$exam) {
-            return "Exam not found.";
+            return $this->renderError("Exam not found.");
         }
 
-        // Fetch user progress for the specified exam
         $userProgress = UserProgress::getProgressForExamBySlug(
             $this->getCurrentUserId(),
             $examSlug
@@ -52,13 +50,11 @@ class ExamController extends Controller
     {
         $examSetSlug = $params["examset_slug"] ?? "unknown-exam-set";
 
-        // Fetch exam set by validated slug
         $examSet = ExamSet::findByValidatedSlug($examSetSlug);
         if (!$examSet) {
-            return "Exam set not found.";
+            return $this->renderError("Exam set not found.");
         }
 
-        // Fetch user progress for the specified exam set
         $userProgress = UserProgress::getProgressForExamSetBySlug(
             $this->getCurrentUserId(),
             $examSet->getExam()->slug,
@@ -87,10 +83,9 @@ class ExamController extends Controller
             (int) $questionNumber
         );
         if (!$question) {
-            return "Question not found.";
+            return $this->renderError("Question not found.");
         }
 
-        // Fetch user progress for the specified question
         $userProgress = UserProgress::getProgressForQuestion(
             $this->getCurrentUserId(),
             $question->getExamSet()->getExam()->slug,
@@ -98,13 +93,25 @@ class ExamController extends Controller
             $questionNumber
         );
 
-        // Fetch explanations for the specific question
         $explanations = Explanation::getExplanationsForQuestion($question->id);
 
         return $this->render("exam/question", [
             "question" => $question,
             "user_progress" => $userProgress,
             "explanations" => $explanations,
+        ]);
+    }
+
+    /**
+     * Renders an error view with the given message.
+     *
+     * @param string $message Error message to display.
+     * @return string Rendered error view content.
+     */
+    protected function renderError(string $message): string
+    {
+        return $this->render("_error", [
+            "message" => $message,
         ]);
     }
 }
