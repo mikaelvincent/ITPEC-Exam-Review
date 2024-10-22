@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Database;
 
 /**
  * Question model represents the `question` table in the database.
@@ -37,5 +38,37 @@ class Question extends Model
     public function getAnswers(): array
     {
         return $this->getRelatedModels(Answer::class, "id");
+    }
+
+    /**
+     * Finds a question by exam set slug and question number.
+     *
+     * @param string $examSetSlug The slug of the exam set.
+     * @param int $questionNumber The question number.
+     * @return Question|null The found Question instance or null.
+     */
+    public static function findByExamSetSlugAndNumber(
+        string $examSetSlug,
+        int $questionNumber
+    ): ?Question {
+        $examSet = ExamSet::findBySlug($examSetSlug);
+        if (!$examSet) {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT q.* FROM question q WHERE q.exam_set_id = :examSetId AND q.question_number = :questionNumber LIMIT 1";
+        $data = $db->fetch($sql, [
+            "examSetId" => $examSet->id,
+            "questionNumber" => $questionNumber,
+        ]);
+
+        if ($data) {
+            $question = new static();
+            $question->attributes = $data;
+            return $question;
+        }
+
+        return null;
     }
 }

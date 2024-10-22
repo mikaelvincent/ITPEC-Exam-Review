@@ -61,7 +61,7 @@ class ExceptionHandler
         $logger->error($logMessage);
 
         http_response_code($exception->getCode() ?: 500);
-        $errorTitle = self::getErrorTitle($exception->getCode());
+        $errorTitle = ErrorHelper::getErrorTitle($exception->getCode());
 
         $breadcrumbs = [
             [
@@ -125,22 +125,5 @@ class ExceptionHandler
         $logger->error($logMessage);
 
         throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
-    }
-
-    /**
-     * Retrieves a human-readable error title based on the status code.
-     *
-     * @param int $code
-     * @return string
-     */
-    protected static function getErrorTitle(int $code): string
-    {
-        $titles = [
-            404 => "404 Not Found",
-            500 => "500 Internal Server Error",
-            401 => "401 Unauthorized",
-        ];
-
-        return $titles[$code] ?? "Error";
     }
 }

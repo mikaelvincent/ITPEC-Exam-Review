@@ -119,21 +119,4 @@ class Application
         $route = $this->router->resolve($this->request);
         echo $route;
     }
-
-    /**
-     * Retrieves a human-readable error title based on the status code.
-     *
-     * @param int $code
-     * @return string
-     */
-    protected function getErrorTitle(int $code): string
-    {
-        $titles = [
-            404 => "404 Not Found",
-            500 => "500 Internal Server Error",
-            401 => "401 Unauthorized",
-        ];
-
-        return $titles[$code] ?? "Error";
-    }
 }
