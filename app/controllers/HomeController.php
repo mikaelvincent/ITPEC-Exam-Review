@@ -34,7 +34,10 @@ class HomeController extends Controller
                 continue;
             }
 
-            $hasProgress = UserProgress::hasCompletedExam($userId, $exam->id);
+            // Instantiate UserProgress and set user_id before calling the method
+            $userProgress = new UserProgress();
+            $userProgress->user_id = $userId;
+            $hasProgress = $userProgress->hasCompletedExam($exam->id);
             $isCompleted = $hasProgress;
 
             if ($isCompleted) {
