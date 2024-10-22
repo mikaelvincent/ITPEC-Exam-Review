@@ -8,7 +8,7 @@ $title = "Q" . $questionNumber . " | ITPEC Exam Review";
         <div class="row mb-5">
             <div class="col">
                 <?php if (!empty($question->image_path)): ?>
-                    <img class="img-fluid" src="<?= htmlspecialchars($question->image_path) ?>" alt="Question Image">
+                    <img class="img-fluid" src="<?= htmlspecialchars($basePath) ?>/<?= htmlspecialchars($question->image_path) ?>" alt="Question Image">
                 <?php endif; ?>
             </div>
         </div>
@@ -88,10 +88,10 @@ $title = "Q" . $questionNumber . " | ITPEC Exam Review";
                 <button class="btn btn-outline-primary btn-lg w-100" type="button" data-bs-target="#explanations" data-bs-toggle="modal">See Explanation</button>
             </div>
             <div class="col">
-                <a href="<?= htmlspecialchars($nextQuestionUrl) ?>" class="btn btn-primary btn-lg w-100" role="button">Next Question</a>
+                <a href="<?= htmlspecialchars($basePath) ?><?= htmlspecialchars($nextQuestionUrl) ?>" class="btn btn-primary btn-lg w-100" role="button">Next Question</a>
             </div>
             <div class="col">
-                <a href="<?= htmlspecialchars($nextQuestionUrl) ?>" class="btn btn-outline-success btn-lg w-100" role="button">Next Question</a>
+                <a href="<?= htmlspecialchars($basePath) ?><?= htmlspecialchars($nextQuestionUrl) ?>" class="btn btn-outline-success btn-lg w-100" role="button">Next Question</a>
             </div>
         </div>
     </div>
