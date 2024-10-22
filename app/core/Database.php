@@ -10,6 +10,7 @@ use App\Core\Interfaces\LoggerInterface;
 
 /**
  * Database class handles the connection to the database using PDO.
+ * Implements Singleton pattern.
  */
 class Database implements DatabaseInterface
 {
@@ -19,6 +20,13 @@ class Database implements DatabaseInterface
      * @var PDO
      */
     private PDO $pdo;
+
+    /**
+     * Singleton instance of the Database class.
+     *
+     * @var Database|null
+     */
+    private static ?Database $instance = null;
 
     /**
      * Logger instance for logging database activities.
@@ -35,14 +43,13 @@ class Database implements DatabaseInterface
     private float $slowQueryThreshold;
 
     /**
-     * Database constructor.
-     *
+     * Private constructor to prevent direct instantiation.
      * Initializes the PDO connection using environment variables.
      *
      * @param LoggerInterface $logger Logger instance for logging.
      * @throws PDOException if the connection fails.
      */
-    public function __construct(LoggerInterface $logger)
+    private function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
         $this->slowQueryThreshold = 1.0; // 1 second
@@ -64,6 +71,22 @@ class Database implements DatabaseInterface
             $this->logger->error("Database connection failed: " . $e->getMessage());
             throw new PDOException("Database connection failed.");
         }
+    }
+
+    /**
+     * Retrieves the singleton instance of the Database class.
+     *
+     * @return DatabaseInterface The singleton instance.
+     */
+    public static function getInstance(): DatabaseInterface
+    {
+        if (self::$instance === null) {
+            // Ensure logger is available when creating the instance.
+            $logger = Logger::getInstance();
+            self::$instance = new self($logger);
+        }
+
+        return self::$instance;
     }
 
     /**
