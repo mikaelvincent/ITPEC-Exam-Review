@@ -15,25 +15,25 @@ use App\Models\Question;
 class ExamController extends Controller
 {
     /**
-     * Validates and retrieves an exam by slug.
+     * Retrieves an exam by slug.
      *
      * @param string $examSlug
      * @return Exam|null
      */
     protected function getExamBySlug(string $examSlug): ?Exam
     {
-        return Exam::findByValidatedSlug($examSlug);
+        return $this->getModelBySlug(Exam::class, $examSlug);
     }
 
     /**
-     * Validates and retrieves an exam set by slug.
+     * Retrieves an exam set by slug.
      *
      * @param string $examSetSlug
      * @return ExamSet|null
      */
     protected function getExamSetBySlug(string $examSetSlug): ?ExamSet
     {
-        return ExamSet::findByValidatedSlug($examSetSlug);
+        return $this->getModelBySlug(ExamSet::class, $examSetSlug);
     }
 
     /**
