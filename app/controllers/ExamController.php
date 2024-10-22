@@ -57,11 +57,12 @@ class ExamController extends Controller
             return $this->renderError("No exam sets available for this exam.");
         }
 
-        // Pass the exam name to the view along with the exam sets
+        // Pass the exam name and slug to the view along with the exam sets
         return $this->render("exam/index", [
             "exam" => $exam,
             "exam_sets" => $examSets,
             "exam_name" => $exam->name,
+            "exam_slug" => $exam->slug,
         ]);
     }
 

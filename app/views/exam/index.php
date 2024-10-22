@@ -17,10 +17,11 @@ $title = htmlspecialchars($exam_name) . " | ITPEC Exam Review"; ?>
                 $buttonClass = "btn-success"; // Completed
             }
 
-            // Generate the URL for this exam set
-            $href = htmlspecialchars($exam_set->slug);
+            // Generate the URL for this exam set as {exam_slug}/{exam_set_slug}
+            $examSetSlug = htmlspecialchars($exam_set->slug);
+            $href = "{$exam_slug}/{$examSetSlug}";
             ?>
-            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="/examsets/<?= $href ?>" <?= $disabled ?>>
+            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="<?= $href ?>" <?= $disabled ?>>
                 <?= htmlspecialchars($exam_set->name) ?>
             </a>
         </div>
