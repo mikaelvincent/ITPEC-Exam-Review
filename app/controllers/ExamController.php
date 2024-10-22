@@ -87,9 +87,17 @@ class ExamController extends Controller
             $examSetSlug
         );
 
+        // Fetch all questions for the exam set
+        $questions = $examSet->getQuestions();
+
+        // Get the exam slug
+        $examSlug = $examSet->getExam()->slug;
+
         return $this->render("exam/examset", [
             "exam_set" => $examSet,
             "user_progress" => $userProgress,
+            "questions" => $questions,
+            "exam_slug" => $examSlug,
         ]);
     }
 

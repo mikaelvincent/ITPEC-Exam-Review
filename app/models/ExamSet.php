@@ -66,6 +66,31 @@ class ExamSet extends Model
     }
 
     /**
+     * Finds an exam set by validated slug.
+     *
+     * @param string $slug The slug to validate and search for.
+     * @return ExamSet|null The found exam set instance or null if not found.
+     */
+    public static function findByValidatedSlug(string $slug): ?ExamSet
+    {
+        if (!Validation::validateSlug($slug)) {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM examset WHERE slug = :slug LIMIT 1";
+        $data = $db->fetch($sql, ['slug' => $slug]);
+
+        if ($data) {
+            $examSet = new self();
+            $examSet->setAttributes($data);
+            return $examSet;
+        }
+
+        return null;
+    }
+
+    /**
      * Retrieves all exam sets associated with the given column and value.
      *
      * @param string $column Column name for filtering.
