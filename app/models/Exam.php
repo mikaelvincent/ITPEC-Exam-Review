@@ -20,17 +20,6 @@ class Exam extends Model
     protected string $table = "exam";
 
     /**
-     * Finds an exam by its slug.
-     *
-     * @param string $slug The slug of the exam.
-     * @return Exam|null The found Exam instance or null.
-     */
-    public static function findBySlug(string $slug): ?Exam
-    {
-        return self::findBy("slug", $slug);
-    }
-
-    /**
      * Gets the exam sets associated with the exam.
      *
      * @return array An array of ExamSet instances.

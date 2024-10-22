@@ -96,4 +96,15 @@ class Validation
             $password
         ) === 1;
     }
+
+    /**
+     * Validates a slug against predefined criteria.
+     *
+     * @param string $slug The slug to validate.
+     * @return bool True if valid, false otherwise.
+     */
+    public static function validateSlug(string $slug): bool
+    {
+        return self::validatePattern('/^[a-zA-Z0-9\-]{3,255}$/', $slug);
+    }
 }

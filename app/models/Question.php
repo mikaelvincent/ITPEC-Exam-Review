@@ -37,27 +37,34 @@ class Question extends Model
      */
     public function getAnswers(): array
     {
-        return $this->getRelatedModels(Answer::class, "id");
+        return Answer::findAllBy("question_id", $this->id);
     }
 
     /**
-     * Finds a question by exam set slug and question number.
+     * Finds a question by validated exam set slug and question number.
      *
      * @param string $examSetSlug The slug of the exam set.
      * @param int $questionNumber The question number.
      * @return Question|null The found Question instance or null.
      */
-    public static function findByExamSetSlugAndNumber(
+    public static function findByValidatedExamSetSlugAndNumber(
         string $examSetSlug,
         int $questionNumber
     ): ?Question {
-        $examSet = ExamSet::findBySlug($examSetSlug);
+        if (
+            !Validation::validateSlug($examSetSlug) ||
+            !Validation::validateInteger($questionNumber)
+        ) {
+            return null;
+        }
+        $examSet = ExamSet::findByValidatedSlug($examSetSlug);
         if (!$examSet) {
             return null;
         }
 
         $db = Database::getInstance();
-        $sql = "SELECT q.* FROM question q WHERE q.exam_set_id = :examSetId AND q.question_number = :questionNumber LIMIT 1";
+        $sql =
+            "SELECT q.* FROM question q WHERE q.exam_set_id = :examSetId AND q.question_number = :questionNumber LIMIT 1";
         $data = $db->fetch($sql, [
             "examSetId" => $examSet->id,
             "questionNumber" => $questionNumber,

@@ -2,9 +2,7 @@
 
 namespace App\Core;
 
-use App\Core\Database;
 use PDOException;
-use App\Core\Logger;
 
 /**
  * Abstract base class for all models, providing common database interactions.
@@ -160,6 +158,20 @@ abstract class Model
         }
 
         return $models;
+    }
+
+    /**
+     * Finds a record by validated slug.
+     *
+     * @param string $slug The slug to search for.
+     * @return static|null Model instance or null if not found or invalid slug.
+     */
+    public static function findByValidatedSlug(string $slug): ?self
+    {
+        if (!Validation::validateSlug($slug)) {
+            return null;
+        }
+        return self::findBy('slug', $slug);
     }
 
     /**

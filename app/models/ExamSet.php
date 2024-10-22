@@ -20,17 +20,6 @@ class ExamSet extends Model
     protected string $table = "examset";
 
     /**
-     * Finds an exam set by its slug.
-     *
-     * @param string $slug The slug of the exam set.
-     * @return ExamSet|null The found ExamSet instance or null.
-     */
-    public static function findBySlug(string $slug): ?ExamSet
-    {
-        return self::findBy("slug", $slug);
-    }
-
-    /**
      * Gets the exam associated with the exam set.
      *
      * @return Exam|null The associated Exam instance or null.
@@ -47,6 +36,6 @@ class ExamSet extends Model
      */
     public function getQuestions(): array
     {
-        return $this->getRelatedModels(Question::class, "id");
+        return Question::findAllBy("exam_set_id", $this->id);
     }
 }

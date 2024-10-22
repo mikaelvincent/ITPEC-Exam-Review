@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserProgress;
-use App\Core\Validation;
 use App\Models\Explanation;
 use App\Models\Exam;
 use App\Models\ExamSet;
@@ -25,15 +24,8 @@ class ExamController extends Controller
     {
         $examSlug = $params["slug"] ?? "unknown-exam";
 
-        // Validate exam slug
-        if (
-            !Validation::validatePattern('/^[a-zA-Z0-9\-]{3,255}$/', $examSlug)
-        ) {
-            return "Invalid exam slug.";
-        }
-
-        // Fetch exam by slug
-        $exam = Exam::findBySlug($examSlug);
+        // Fetch exam by validated slug
+        $exam = Exam::findByValidatedSlug($examSlug);
         if (!$exam) {
             return "Exam not found.";
         }
@@ -53,23 +45,15 @@ class ExamController extends Controller
     /**
      * Displays the page for a specific exam set.
      *
-     * @param array $params Route parameters including 'slug' and 'examset_slug'.
+     * @param array $params Route parameters including 'examset_slug'.
      * @return string Rendered view content.
      */
     public function examSet(array $params): string
     {
-        $examSlug = $params["slug"] ?? "unknown-exam";
         $examSetSlug = $params["examset_slug"] ?? "unknown-exam-set";
 
-        // Validate exam set slug
-        if (
-            !Validation::validatePattern('/^[a-zA-Z0-9\-]{3,255}$/', $examSetSlug)
-        ) {
-            return "Invalid exam set slug.";
-        }
-
-        // Fetch exam set by slug
-        $examSet = ExamSet::findBySlug($examSetSlug);
+        // Fetch exam set by validated slug
+        $examSet = ExamSet::findByValidatedSlug($examSetSlug);
         if (!$examSet) {
             return "Exam set not found.";
         }
@@ -77,7 +61,7 @@ class ExamController extends Controller
         // Fetch user progress for the specified exam set
         $userProgress = UserProgress::getProgressForExamSetBySlug(
             $this->getCurrentUserId(),
-            $examSlug,
+            $examSet->getExam()->slug,
             $examSetSlug
         );
 
@@ -90,22 +74,15 @@ class ExamController extends Controller
     /**
      * Displays the page for a specific question within an exam set.
      *
-     * @param array $params Route parameters including 'slug', 'examset_slug', and 'question_number'.
+     * @param array $params Route parameters including 'examset_slug' and 'question_number'.
      * @return string Rendered view content.
      */
     public function question(array $params): string
     {
-        $examSlug = $params["slug"] ?? "unknown-exam";
         $examSetSlug = $params["examset_slug"] ?? "unknown-exam-set";
         $questionNumber = $params["question_number"] ?? "unknown-question";
 
-        // Validate question number
-        if (!Validation::validateInteger($questionNumber)) {
-            return "Invalid question number.";
-        }
-
-        // Fetch question by exam set slug and question number
-        $question = Question::findByExamSetSlugAndNumber(
+        $question = Question::findByValidatedExamSetSlugAndNumber(
             $examSetSlug,
             (int) $questionNumber
         );
@@ -116,7 +93,7 @@ class ExamController extends Controller
         // Fetch user progress for the specified question
         $userProgress = UserProgress::getProgressForQuestion(
             $this->getCurrentUserId(),
-            $examSlug,
+            $question->getExamSet()->getExam()->slug,
             $examSetSlug,
             $questionNumber
         );
