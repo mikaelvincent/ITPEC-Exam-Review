@@ -2,18 +2,13 @@
 
 namespace App\Core;
 
+use App\Core\Interfaces\LoggerInterface;
+
 /**
  * Application class responsible for initializing and running the application.
  */
 class Application
 {
-    /**
-     * The current application instance.
-     *
-     * @var Application|null
-     */
-    public static ?Application $app = null;
-
     /**
      * The current request instance.
      *
@@ -43,16 +38,23 @@ class Application
     public array $middleware = [];
 
     /**
+     * Logger instance.
+     *
+     * @var LoggerInterface
+     */
+    public LoggerInterface $logger;
+
+    /**
      * Application constructor.
      *
      * Initializes the request, response, router, and middleware components.
      */
     public function __construct()
     {
-        self::$app = $this;
+        $this->logger = new Logger();
         $this->request = new Request();
         $this->response = new Response();
-        $this->router = new Router();
+        $this->router = new Router($this->request);
 
         $this->registerRoutes();
     }
@@ -116,7 +118,7 @@ class Application
             $middleware($this->request, $this->response);
         }
 
-        $route = $this->router->resolve($this->request);
+        $route = $this->router->resolve($this->request, $this->response);
         echo $route;
     }
 }

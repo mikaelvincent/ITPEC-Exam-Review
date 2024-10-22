@@ -11,13 +11,6 @@ use App\Core\Interfaces\LoggerInterface;
 class Logger implements LoggerInterface
 {
     /**
-     * The singleton instance of the Logger.
-     *
-     * @var LoggerInterface|null
-     */
-    private static ?LoggerInterface $instance = null;
-
-    /**
      * The path to the log file.
      *
      * @var string
@@ -36,7 +29,7 @@ class Logger implements LoggerInterface
      *
      * Initializes the log file path and maximum file size.
      */
-    private function __construct()
+    public function __construct()
     {
         $logDirectory = __DIR__ . "/../../logs";
         if (!is_dir($logDirectory)) {
@@ -50,19 +43,6 @@ class Logger implements LoggerInterface
         if (!file_exists($this->logFile)) {
             file_put_contents($this->logFile, "");
         }
-    }
-
-    /**
-     * Retrieves the singleton instance of the LoggerInterface implementation.
-     *
-     * @return LoggerInterface The LoggerInterface instance.
-     */
-    public static function getInstance(): LoggerInterface
-    {
-        if (self::$instance === null) {
-            self::$instance = new Logger();
-        }
-        return self::$instance;
     }
 
     /**
@@ -107,7 +87,6 @@ class Logger implements LoggerInterface
      */
     private function writeLog(string $level, string $message): void
     {
-        // Ensure the log file exists before attempting to get its size
         if (!file_exists($this->logFile)) {
             file_put_contents($this->logFile, "");
         }

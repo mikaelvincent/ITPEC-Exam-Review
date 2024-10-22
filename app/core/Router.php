@@ -2,22 +2,41 @@
 
 namespace App\Core;
 
-use App\Core\Application;
-
 /**
  * Router class handles routing of HTTP requests to appropriate controllers and actions.
  */
 class Router
 {
     /**
-     * @var array An array of defined routes.
+     * An array of defined routes.
+     *
+     * @var array
      */
-    protected $routes = [];
+    protected array $routes = [];
 
     /**
-     * @var array An array to store breadcrumb data.
+     * An array to store breadcrumb data.
+     *
+     * @var array
      */
-    protected $breadcrumbs = [];
+    protected array $breadcrumbs = [];
+
+    /**
+     * The request instance.
+     *
+     * @var Request
+     */
+    protected Request $request;
+
+    /**
+     * Router constructor.
+     *
+     * @param Request $request
+     */
+    public function __construct(Request $request)
+    {
+        $this->request = $request;
+    }
 
     /**
      * Adds a new GET route.
@@ -30,7 +49,6 @@ class Router
      */
     public function get(string $path, $callback): void
     {
-        // Convert route path with placeholders to a regex pattern
         $routePattern = preg_replace(
             "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
             '(?P<$1>[a-zA-Z0-9\-]+)',
@@ -48,10 +66,11 @@ class Router
      * Resolves the current request to a route and executes the corresponding action.
      *
      * @param Request $request
+     * @param Response $response
      * @return string
      * @throws \Exception
      */
-    public function resolve(Request $request): string
+    public function resolve(Request $request, Response $response): string
     {
         $method = $request->getMethod();
         $path = $request->getUri();
@@ -82,7 +101,11 @@ class Router
                         );
                     }
 
-                    $controller = new $controllerName();
+                    // Generate breadcrumbs based on the path
+                    $this->generateBreadcrumbs($path);
+
+                    // Instantiate the controller with dependencies
+                    $controller = new $controllerName($this, $request, $response);
 
                     if (!method_exists($controller, $action)) {
                         throw new \Exception(
@@ -90,9 +113,6 @@ class Router
                             500
                         );
                     }
-
-                    // Generate breadcrumbs based on the path
-                    $this->generateBreadcrumbs($path);
 
                     // Pass params to the controller action
                     return call_user_func_array(
@@ -157,7 +177,7 @@ class Router
     protected function generateBreadcrumbs(string $path): void
     {
         $segments = explode("/", trim($path, "/"));
-        $basePath = Application::$app->request->getBasePath();
+        $basePath = $this->request->getBasePath();
         $currentPath = $basePath;
         $this->breadcrumbs = [
             [
@@ -171,7 +191,6 @@ class Router
                 continue;
             }
             $currentPath .= "/" . $segment;
-            // Replace hyphens with spaces and capitalize words for breadcrumb titles
             $title = ucwords(str_replace("-", " ", $segment));
             $this->breadcrumbs[] = [
                 "title" => $title,

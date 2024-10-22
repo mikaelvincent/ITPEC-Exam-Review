@@ -8,6 +8,41 @@ namespace App\Core;
 class Controller
 {
     /**
+     * The router instance.
+     *
+     * @var Router
+     */
+    protected Router $router;
+
+    /**
+     * The request instance.
+     *
+     * @var Request
+     */
+    protected Request $request;
+
+    /**
+     * The response instance.
+     *
+     * @var Response
+     */
+    protected Response $response;
+
+    /**
+     * Controller constructor.
+     *
+     * @param Router $router
+     * @param Request $request
+     * @param Response $response
+     */
+    public function __construct(Router $router, Request $request, Response $response)
+    {
+        $this->router = $router;
+        $this->request = $request;
+        $this->response = $response;
+    }
+
+    /**
      * Renders a view with the provided parameters.
      *
      * @param string $view Path to the view file.
@@ -17,7 +52,7 @@ class Controller
     public function render(string $view, array $params = []): string
     {
         $params["breadcrumbs"] = $this->getBreadcrumbs();
-        return Application::$app->router->renderView($view, $params);
+        return $this->router->renderView($view, $params);
     }
 
     /**
@@ -50,7 +85,7 @@ class Controller
      */
     protected function getBreadcrumbs(): array
     {
-        return Application::$app->router->getBreadcrumbs();
+        return $this->router->getBreadcrumbs();
     }
 
     /**

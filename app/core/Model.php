@@ -53,17 +53,17 @@ abstract class Model
     protected LoggerInterface $logger;
 
     /**
-     * Constructor with optional dependency injection.
+     * Constructor with dependency injection.
      *
-     * @param DatabaseInterface|null $db
-     * @param LoggerInterface|null $logger
+     * @param DatabaseInterface $db
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        ?DatabaseInterface $db = null,
-        ?LoggerInterface $logger = null
+        DatabaseInterface $db,
+        LoggerInterface $logger
     ) {
-        $this->db = $db ?? Database::getInstance();
-        $this->logger = $logger ?? Logger::getInstance();
+        $this->db = $db;
+        $this->logger = $logger;
     }
 
     /**
@@ -108,7 +108,10 @@ abstract class Model
      */
     public static function find(int $id): ?self
     {
-        $instance = new static();
+        $instance = new static(
+            new Database(new Logger()),
+            new Logger()
+        );
         $sql = "SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1";
         $data = $instance->db->fetch($sql, ['id' => $id]);
 
