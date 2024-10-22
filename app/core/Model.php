@@ -259,30 +259,4 @@ abstract class Model
     {
         return [];
     }
-
-    /**
-     * Defines a relationship to another model.
-     *
-     * @param string $relationshipType Type of relationship ('hasOne', 'hasMany').
-     * @param string $relatedModel Related model class name.
-     * @param string $foreignKey Foreign key attribute.
-     * @return mixed Related model instance(s) or null.
-     */
-    public function relationship(
-        string $relationshipType,
-        string $relatedModel,
-        string $foreignKey
-    ) {
-        switch ($relationshipType) {
-            case "hasOne":
-                return $relatedModel::find($this->attributes[$foreignKey]);
-            case "hasMany":
-                return $relatedModel::findAllBy(
-                    $foreignKey,
-                    $this->attributes[$foreignKey]
-                );
-            default:
-                return null;
-        }
-    }
 }
