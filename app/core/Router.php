@@ -3,6 +3,51 @@
 namespace App\Core;
 
 /**
+ * Route class encapsulates individual route details.
+ */
+class Route
+{
+    /**
+     * HTTP method for the route.
+     *
+     * @var string
+     */
+    public string $method;
+
+    /**
+     * URI pattern for the route.
+     *
+     * @var string
+     */
+    public string $pattern;
+
+    /**
+     * Callback associated with the route.
+     *
+     * @var callable|string
+     */
+    public $callback;
+
+    /**
+     * Constructor for the Route class.
+     *
+     * @param string $method HTTP method.
+     * @param string $pattern URI pattern.
+     * @param callable|string $callback Callback function or controller action.
+     */
+    public function __construct(string $method, string $pattern, $callback)
+    {
+        $this->method = strtoupper($method);
+        $this->pattern = "#^" . preg_replace(
+            "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
+            '(?P<$1>[a-zA-Z0-9\-]+)',
+            $pattern
+        ) . '$#';
+        $this->callback = $callback;
+    }
+}
+
+/**
  * Router class handles routing of HTTP requests to appropriate controllers and actions.
  */
 class Router
@@ -10,7 +55,7 @@ class Router
     /**
      * An array of defined routes.
      *
-     * @var array
+     * @var Route[]
      */
     protected array $routes = [];
 
@@ -57,6 +102,19 @@ class Router
     }
 
     /**
+     * Adds a new route.
+     *
+     * @param string $method HTTP method (GET, POST, etc.).
+     * @param string $path URI path.
+     * @param callable|string $callback Callback function or controller action.
+     * @return void
+     */
+    public function addRoute(string $method, string $path, $callback): void
+    {
+        $this->routes[] = new Route($method, $path, $callback);
+    }
+
+    /**
      * Adds a new GET route.
      *
      * @param string $path
@@ -65,17 +123,7 @@ class Router
      */
     public function get(string $path, $callback): void
     {
-        $routePattern = preg_replace(
-            "/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/",
-            '(?P<$1>[a-zA-Z0-9\-]+)',
-            $path
-        );
-        $routePattern = "#^" . $routePattern . '$#';
-
-        $this->routes["GET"][] = [
-            "pattern" => $routePattern,
-            "callback" => $callback,
-        ];
+        $this->addRoute('GET', $path, $callback);
     }
 
     /**
@@ -91,19 +139,19 @@ class Router
         $method = $request->getMethod();
         $path = $request->getUri();
 
-        if (!isset($this->routes[$method])) {
-            throw new \Exception("Page not found", 404);
-        }
+        foreach ($this->routes as $route) {
+            if ($route->method !== $method) {
+                continue;
+            }
 
-        foreach ($this->routes[$method] as $route) {
-            if (preg_match($route["pattern"], $path, $matches)) {
+            if (preg_match($route->pattern, $path, $matches)) {
                 $params = array_filter(
                     $matches,
                     "is_string",
                     ARRAY_FILTER_USE_KEY
                 );
 
-                $callback = $route["callback"];
+                $callback = $route->callback;
 
                 if (is_string($callback)) {
                     $parts = explode("@", $callback);
