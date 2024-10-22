@@ -98,4 +98,16 @@ class Exam extends Model
         $repository = new ExamRepository(Database::getInstance());
         return $repository->findBy('slug', $slug);
     }
+
+    /**
+     * Finds an exam by its ID.
+     *
+     * @param int $id The ID of the exam.
+     * @return Exam|null The found exam instance or null if not found.
+     */
+    public static function find(int $id): ?Exam
+    {
+        $repository = new ExamRepository(Database::getInstance());
+        return $repository->findBy('id', $id);
+    }
 }
