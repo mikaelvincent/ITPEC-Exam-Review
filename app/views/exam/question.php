@@ -1,5 +1,7 @@
 <?php
-$title = "Q" . htmlspecialchars($question->question_number) . " | ITPEC Exam Review";
+// Safeguard against undefined 'question_number'
+$questionNumber = isset($question->question_number) ? htmlspecialchars($question->question_number) : 'N/A';
+$title = "Q" . $questionNumber . " | ITPEC Exam Review";
 ?>
 <div class="row">
     <div class="col-12 col-lg-8 order-lg-last">
@@ -15,11 +17,11 @@ $title = "Q" . htmlspecialchars($question->question_number) . " | ITPEC Exam Rev
         <div class="row gy-3 row-cols-2 row-cols-xl-1 mb-5">
             <?php foreach ($question->getAnswers() as $answer): ?>
                 <?php
-                $isSelected = $user_progress['selected_answer_id'] === $answer->id;
+                $isSelected = isset($user_progress['selected_answer_id']) && $user_progress['selected_answer_id'] === $answer->id;
                 $isCorrect = $answer->isCorrect();
                 $buttonClass = 'btn-outline-primary';
                 
-                if ($user_progress['is_completed']) {
+                if (isset($user_progress['is_completed']) && $user_progress['is_completed']) {
                     if ($isSelected && $isCorrect) {
                         $buttonClass = 'btn-success';
                     } elseif ($isSelected && !$isCorrect) {
@@ -33,7 +35,7 @@ $title = "Q" . htmlspecialchars($question->question_number) . " | ITPEC Exam Rev
                     <button
                         class="btn <?= $buttonClass ?> btn-lg w-100 py-4"
                         type="button"
-                        <?= $user_progress['is_completed'] ? 'disabled' : '' ?>
+                        <?= (isset($user_progress['is_completed']) && $user_progress['is_completed']) ? 'disabled' : '' ?>
                         data-answer-id="<?= htmlspecialchars($answer->id) ?>"
                     >
                         <?= htmlspecialchars($answer->label) ?>
@@ -43,7 +45,7 @@ $title = "Q" . htmlspecialchars($question->question_number) . " | ITPEC Exam Rev
         </div>
         <hr class="mb-5">
         <div class="row gy-3 row-cols-1 mb-5">
-            <?php if (!$user_progress['is_completed']): ?>
+            <?php if (isset($user_progress['is_completed']) && !$user_progress['is_completed']): ?>
                 <div class="col">
                     <button class="btn btn-success btn-lg w-100" type="button" id="submit-answer">Submit</button>
                 </div>
@@ -57,7 +59,7 @@ $title = "Q" . htmlspecialchars($question->question_number) . " | ITPEC Exam Rev
                     <div class="modal-dialog modal-fullscreen" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h4 class="modal-title fw-bold">Explanation for Q<?= htmlspecialchars($question->question_number) ?></h4>
+                                <h4 class="modal-title fw-bold">Explanation for Q<?= $questionNumber ?></h4>
                                 <button class="btn-close" type="button" aria-label="Close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
