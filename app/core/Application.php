@@ -78,7 +78,7 @@ class Application
         $this->container = new Container();
 
         // Bind core services
-        $this->container->bindSingleton(LoggerInterface::class, Logger::getInstance());  // Modified for Singleton
+        $this->container->bindSingleton(LoggerInterface::class, Logger::getInstance());
         $this->container->bind(Session::class);
         $this->container->bind(Request::class);
         $this->container->bind(Response::class);
@@ -93,13 +93,13 @@ class Application
         // Resolve core services
         $this->logger = $this->container->make(LoggerInterface::class);
         $this->session = $this->container->make(Session::class);
-        $this->request = $this->container->make(Request::class);  // Ensure request is initialized
+        $this->request = $this->container->make(Request::class);
         $this->response = $this->container->make(Response::class);
         $this->router = $this->container->make(Router::class);
 
         $this->middlewarePipeline = new MiddlewarePipeline();
 
-        $this->registerRoutes();
+        $this->registerRoutes();  // Ensure routes are registered
     }
 
     /**
@@ -109,7 +109,12 @@ class Application
      */
     protected function registerRoutes(): void
     {
-        // Existing route registrations
+        $this->router->get('/', 'HomeController@index');
+        $this->router->get('/contributors', 'ContributorsController@index');
+        $this->router->get('/{slug}', 'ExamController@index');
+        $this->router->get('/{slug}/congratulations', 'ExamController@congratulations');
+        $this->router->get('/{slug}/{examset_slug}', 'ExamController@examSet');
+        $this->router->get('/{slug}/{examset_slug}/Q{question_number}', 'ExamController@question');
     }
 
     /**
