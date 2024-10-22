@@ -11,6 +11,13 @@ use App\Core\Interfaces\LoggerInterface;
 class Logger implements LoggerInterface
 {
     /**
+     * Singleton instance of Logger.
+     *
+     * @var Logger|null
+     */
+    private static ?Logger $instance = null;
+
+    /**
      * The path to the log file.
      *
      * @var string
@@ -29,20 +36,33 @@ class Logger implements LoggerInterface
      *
      * Initializes the log file path and maximum file size.
      */
-    public function __construct()
+    private function __construct()
     {
-        $logDirectory = __DIR__ . "/../../logs";
+        $logDirectory = __DIR__ . '/../../logs';
         if (!is_dir($logDirectory)) {
             mkdir($logDirectory, 0755, true);
         }
 
-        $this->logFile = $logDirectory . "/app.log";
+        $this->logFile = $logDirectory . '/app.log';
         $this->maxFileSize = 5 * 1024 * 1024; // 5 MB
 
         // Ensure the log file exists to prevent filesize() errors
         if (!file_exists($this->logFile)) {
-            file_put_contents($this->logFile, "");
+            file_put_contents($this->logFile, '');
         }
+    }
+
+    /**
+     * Retrieves the singleton instance of the Logger.
+     *
+     * @return LoggerInterface
+     */
+    public static function getInstance(): LoggerInterface
+    {
+        if (self::$instance === null) {
+            self::$instance = new Logger();
+        }
+        return self::$instance;
     }
 
     /**
@@ -53,7 +73,7 @@ class Logger implements LoggerInterface
      */
     public function info(string $message): void
     {
-        $this->writeLog("INFO", $message);
+        $this->writeLog('INFO', $message);
     }
 
     /**
@@ -64,7 +84,7 @@ class Logger implements LoggerInterface
      */
     public function error(string $message): void
     {
-        $this->writeLog("ERROR", $message);
+        $this->writeLog('ERROR', $message);
     }
 
     /**
@@ -75,7 +95,7 @@ class Logger implements LoggerInterface
      */
     public function warning(string $message): void
     {
-        $this->writeLog("WARNING", $message);
+        $this->writeLog('WARNING', $message);
     }
 
     /**
@@ -88,14 +108,14 @@ class Logger implements LoggerInterface
     private function writeLog(string $level, string $message): void
     {
         if (!file_exists($this->logFile)) {
-            file_put_contents($this->logFile, "");
+            file_put_contents($this->logFile, '');
         }
 
         if (filesize($this->logFile) >= $this->maxFileSize) {
             $this->rotateLog();
         }
 
-        $timestamp = date("Y-m-d H:i:s");
+        $timestamp = date('Y-m-d H:i:s');
         $logEntry = "[{$timestamp}] [{$level}] {$message}\n";
         file_put_contents($this->logFile, $logEntry, FILE_APPEND | LOCK_EX);
     }
@@ -107,11 +127,11 @@ class Logger implements LoggerInterface
      */
     private function rotateLog(): void
     {
-        $timestamp = date("Ymd_His");
-        $rotatedFile = $this->logFile . "." . $timestamp;
+        $timestamp = date('Ymd_His');
+        $rotatedFile = $this->logFile . '.' . $timestamp;
         rename($this->logFile, $rotatedFile);
 
         // Create a new empty log file after rotation
-        file_put_contents($this->logFile, "");
+        file_put_contents($this->logFile, '');
     }
 }
