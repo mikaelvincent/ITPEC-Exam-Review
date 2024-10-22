@@ -5,23 +5,24 @@ $title = htmlspecialchars($exam_name) . " | ITPEC Exam Review"; ?>
     <?php foreach ($exam_sets as $exam_set): ?>
         <div class="col">
             <?php
-            // Determine button styling and state based on some condition (e.g., progress)
+            // Check if the exam set contains any questions
+            $questions = $exam_set->getQuestions();
             $buttonClass = "btn-secondary"; // Default class for available exam sets
             $disabled = ""; // Default to enabled
 
-            // Example condition to disable button (e.g., no progress for exam set)
-            if (/* condition for disabled */ false) {
+            if (empty($questions)) {
+                // Disable the button if there are no questions in the exam set
                 $buttonClass = "btn-secondary disabled";
                 $disabled = "disabled";
-            } else if (/* condition for completed */ false) {
-                $buttonClass = "btn-success"; // Completed
+            } elseif (/* condition for completed */ false) {
+                $buttonClass = "btn-success"; // Completed exam set
             }
 
             // Generate the URL for this exam set as {exam_slug}/{exam_set_slug}
             $examSetSlug = htmlspecialchars($exam_set->slug);
             $href = "{$exam_slug}/{$examSetSlug}";
             ?>
-            <a class="btn <?= $buttonClass ?> btn-lg w-100" role="button" href="<?= $href ?>" <?= $disabled ?>>
+            <a class="btn <?= $buttonClass ?> <?= $disabled ?> btn-lg w-100" role="button" href="<?= $href ?>">
                 <?= htmlspecialchars($exam_set->name) ?>
             </a>
         </div>
