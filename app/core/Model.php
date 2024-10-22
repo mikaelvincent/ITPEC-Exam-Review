@@ -14,7 +14,7 @@ abstract class Model
      *
      * @var string
      */
-    protected string $primaryKey = "id";
+    protected string $primaryKey = 'id';
 
     /**
      * Associated database table name.
@@ -82,7 +82,7 @@ abstract class Model
         $instance = new static();
         $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1";
-        $data = $db->fetch($sql, ["id" => $id]);
+        $data = $db->fetch($sql, ['id' => $id]);
 
         if ($data) {
             $instance->attributes = $data;
@@ -104,7 +104,7 @@ abstract class Model
         $instance = new static();
         $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table} WHERE {$column} = :value LIMIT 1";
-        $data = $db->fetch($sql, ["value" => $value]);
+        $data = $db->fetch($sql, ['value' => $value]);
 
         if ($data) {
             $instance->attributes = $data;
@@ -148,7 +148,7 @@ abstract class Model
         $instance = new static();
         $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table} WHERE {$column} = :value";
-        $rows = $db->fetchAll($sql, ["value" => $value]);
+        $rows = $db->fetchAll($sql, ['value' => $value]);
 
         $models = [];
         foreach ($rows as $row) {
@@ -171,7 +171,7 @@ abstract class Model
         if (!Validation::validateSlug($slug)) {
             return null;
         }
-        return self::findBy('slug', $slug);
+        return static::findBy('slug', $slug);
     }
 
     /**
