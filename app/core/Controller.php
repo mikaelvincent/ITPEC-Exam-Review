@@ -36,4 +36,14 @@ class Controller
             "message" => $message,
         ]);
     }
+
+    /**
+     * Retrieves the current user's ID from the session.
+     *
+     * @return int User ID.
+     */
+    protected function getCurrentUserId(): int
+    {
+        return Session::get("user_id") ?? 0;
+    }
 }

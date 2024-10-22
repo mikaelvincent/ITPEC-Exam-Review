@@ -3,6 +3,8 @@
 namespace App\Core;
 
 use App\Core\Traits\ModelUtilities;
+use App\Core\Interfaces\DatabaseInterface;
+use App\Core\Interfaces\LoggerInterface;
 
 /**
  * Abstract base class for all models, providing common database interactions.
@@ -38,6 +40,34 @@ abstract class Model
      * @var array
      */
     protected array $validationErrors = [];
+
+    /**
+     * Database interface instance for dependency injection.
+     *
+     * @var DatabaseInterface
+     */
+    protected DatabaseInterface $db;
+
+    /**
+     * Logger interface instance for dependency injection.
+     *
+     * @var LoggerInterface
+     */
+    protected LoggerInterface $logger;
+
+    /**
+     * Constructor with optional dependency injection.
+     *
+     * @param DatabaseInterface|null $db
+     * @param LoggerInterface|null $logger
+     */
+    public function __construct(
+        ?DatabaseInterface $db = null,
+        ?LoggerInterface $logger = null
+    ) {
+        $this->db = $db ?? Database::getInstance();
+        $this->logger = $logger ?? Logger::getInstance();
+    }
 
     /**
      * Magic getter for model attributes.
@@ -82,9 +112,8 @@ abstract class Model
     public static function find(int $id): ?self
     {
         $instance = new static();
-        $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1";
-        $data = $db->fetch($sql, ['id' => $id]);
+        $data = $instance->db->fetch($sql, ['id' => $id]);
 
         if ($data) {
             $instance->attributes = $data;
@@ -104,9 +133,8 @@ abstract class Model
     public static function findBy(string $column, $value): ?self
     {
         $instance = new static();
-        $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table} WHERE {$column} = :value LIMIT 1";
-        $data = $db->fetch($sql, ['value' => $value]);
+        $data = $instance->db->fetch($sql, ['value' => $value]);
 
         if ($data) {
             $instance->attributes = $data;
@@ -124,9 +152,8 @@ abstract class Model
     public static function findAll(): array
     {
         $instance = new static();
-        $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table}";
-        $rows = $db->fetchAll($sql);
+        $rows = $instance->db->fetchAll($sql);
 
         $models = [];
         foreach ($rows as $row) {
@@ -148,9 +175,8 @@ abstract class Model
     public static function findAllBy(string $column, $value): array
     {
         $instance = new static();
-        $db = Database::getInstance();
         $sql = "SELECT * FROM {$instance->table} WHERE {$column} = :value";
-        $rows = $db->fetchAll($sql, ['value' => $value]);
+        $rows = $instance->db->fetchAll($sql, ['value' => $value]);
 
         $models = [];
         foreach ($rows as $row) {
@@ -173,17 +199,54 @@ abstract class Model
             return false;
         }
 
-        $db = Database::getInstance();
         $sql = "DELETE FROM {$this->table} WHERE {$this->primaryKey} = :id";
 
         try {
-            $db->execute($sql, ["id" => $this->attributes[$this->primaryKey]]);
+            $this->db->execute($sql, ["id" => $this->attributes[$this->primaryKey]]);
             return true;
-        } catch (PDOException $e) {
-            $logger = Logger::getInstance();
-            $logger->error(
-                "Database Error on deleting model: " . $e->getMessage()
-            );
+        } catch (\PDOException $e) {
+            $this->logger->error("Database Error on deleting model: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Saves the current model instance to the database.
+     *
+     * @return bool True on success, false otherwise.
+     */
+    public function save(): bool
+    {
+        $errors = $this->validate();
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                $this->logger->error("Validation Error: " . $error);
+            }
+            return false;
+        }
+
+        $attributes = $this->getAttributes();
+        $primaryKeyValue = $this->attributes[$this->primaryKey] ?? null;
+
+        if ($primaryKeyValue !== null) {
+            // Update existing record
+            $setClause = implode(", ", array_map(fn($col) => "{$col} = :{$col}", array_keys($attributes)));
+            $sql = "UPDATE {$this->table} SET {$setClause} WHERE {$this->primaryKey} = :{$this->primaryKey}";
+        } else {
+            // Insert new record
+            $columns = implode(", ", array_keys($attributes));
+            $params = implode(", ", array_map(fn($col) => ":{$col}", array_keys($attributes)));
+            $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$params})";
+        }
+
+        try {
+            $this->db->execute($sql, $attributes);
+            if ($primaryKeyValue === null) {
+                $this->attributes[$this->primaryKey] = (int) $this->db->getLastInsertId();
+            }
+            return true;
+        } catch (\PDOException $e) {
+            $this->logger->error("Database Error on saving model: " . $e->getMessage());
             return false;
         }
     }
@@ -198,5 +261,15 @@ abstract class Model
     public function validate(): array
     {
         return [];
+    }
+
+    /**
+     * Returns the model attributes.
+     *
+     * @return array Model attributes.
+     */
+    public function getAttributes(): array
+    {
+        return $this->attributes;
     }
 }

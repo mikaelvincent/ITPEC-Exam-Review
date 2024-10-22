@@ -13,9 +13,9 @@ class Logger implements LoggerInterface
     /**
      * The singleton instance of the Logger.
      *
-     * @var Logger|null
+     * @var LoggerInterface|null
      */
-    private static ?Logger $instance = null;
+    private static ?LoggerInterface $instance = null;
 
     /**
      * The path to the log file.
@@ -53,11 +53,11 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * Retrieves the singleton instance of the Logger.
+     * Retrieves the singleton instance of the LoggerInterface implementation.
      *
-     * @return Logger The Logger instance.
+     * @return LoggerInterface The LoggerInterface instance.
      */
-    public static function getInstance(): Logger
+    public static function getInstance(): LoggerInterface
     {
         if (self::$instance === null) {
             self::$instance = new Logger();

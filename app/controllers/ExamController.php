@@ -15,6 +15,28 @@ use App\Models\Question;
 class ExamController extends Controller
 {
     /**
+     * Validates and retrieves an exam by slug.
+     *
+     * @param string $examSlug
+     * @return Exam|null
+     */
+    protected function getExamBySlug(string $examSlug): ?Exam
+    {
+        return Exam::findByValidatedSlug($examSlug);
+    }
+
+    /**
+     * Validates and retrieves an exam set by slug.
+     *
+     * @param string $examSetSlug
+     * @return ExamSet|null
+     */
+    protected function getExamSetBySlug(string $examSetSlug): ?ExamSet
+    {
+        return ExamSet::findByValidatedSlug($examSetSlug);
+    }
+
+    /**
      * Displays the main page for a specific exam.
      *
      * @param array $params Route parameters including 'slug'.
@@ -24,7 +46,7 @@ class ExamController extends Controller
     {
         $examSlug = $params["slug"] ?? "unknown-exam";
 
-        $exam = Exam::findByValidatedSlug($examSlug);
+        $exam = $this->getExamBySlug($examSlug);
         if (!$exam) {
             return $this->renderError("Exam not found.");
         }
@@ -50,7 +72,7 @@ class ExamController extends Controller
     {
         $examSetSlug = $params["examset_slug"] ?? "unknown-exam-set";
 
-        $examSet = ExamSet::findByValidatedSlug($examSetSlug);
+        $examSet = $this->getExamSetBySlug($examSetSlug);
         if (!$examSet) {
             return $this->renderError("Exam set not found.");
         }

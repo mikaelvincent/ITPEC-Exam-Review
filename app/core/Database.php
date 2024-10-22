@@ -16,9 +16,9 @@ class Database implements DatabaseInterface
     /**
      * The single instance of the Database.
      *
-     * @var Database|null
+     * @var DatabaseInterface|null
      */
-    private static ?Database $instance = null;
+    private static ?DatabaseInterface $instance = null;
 
     /**
      * The PDO instance.
@@ -76,11 +76,11 @@ class Database implements DatabaseInterface
     }
 
     /**
-     * Retrieves the single instance of the Database.
+     * Retrieves the single instance of the DatabaseInterface implementation.
      *
-     * @return Database The Database instance.
+     * @return DatabaseInterface The DatabaseInterface instance.
      */
-    public static function getInstance(): Database
+    public static function getInstance(): DatabaseInterface
     {
         if (self::$instance === null) {
             self::$instance = new Database();
