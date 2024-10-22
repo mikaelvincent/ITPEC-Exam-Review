@@ -2,15 +2,11 @@
 
 namespace App\Core;
 
-use App\Core\Traits\ControllerUtilities;
-
 /**
  * Base Controller class providing common functionalities for all controllers.
  */
 class Controller
 {
-    use ControllerUtilities;
-
     /**
      * Renders a view with the provided parameters.
      *
@@ -45,5 +41,30 @@ class Controller
     protected function getCurrentUserId(): int
     {
         return Session::get("user_id") ?? 0;
+    }
+
+    /**
+     * Retrieves breadcrumb navigation data.
+     *
+     * @return array Breadcrumbs for the current page.
+     */
+    protected function getBreadcrumbs(): array
+    {
+        return Application::$app->router->getBreadcrumbs();
+    }
+
+    /**
+     * Retrieves a model by its slug with validation.
+     *
+     * @param string $modelClass The model class name.
+     * @param string $slug The slug to search for.
+     * @return Model|null The model instance or null if not found.
+     */
+    protected function getModelBySlug(string $modelClass, string $slug): ?Model
+    {
+        if (!method_exists($modelClass, 'findByValidatedSlug')) {
+            throw new \Exception("Method findByValidatedSlug not found in {$modelClass}");
+        }
+        return $modelClass::findByValidatedSlug($slug);
     }
 }

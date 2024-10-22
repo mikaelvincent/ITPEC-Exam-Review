@@ -2,7 +2,6 @@
 
 namespace App\Core;
 
-use App\Core\Traits\ModelUtilities;
 use App\Core\Interfaces\DatabaseInterface;
 use App\Core\Interfaces\LoggerInterface;
 
@@ -11,8 +10,6 @@ use App\Core\Interfaces\LoggerInterface;
  */
 abstract class Model
 {
-    use ModelUtilities;
-
     /**
      * Primary key field name.
      *
@@ -298,5 +295,19 @@ abstract class Model
     public function getAttributes(): array
     {
         return $this->attributes;
+    }
+
+    /**
+     * Finds a record by validated slug.
+     *
+     * @param string $slug The slug to search for.
+     * @return static|null Model instance or null if not found or invalid slug.
+     */
+    public static function findByValidatedSlug(string $slug): ?self
+    {
+        if (!Validation::validateSlug($slug)) {
+            return null;
+        }
+        return static::findBy('slug', $slug);
     }
 }
