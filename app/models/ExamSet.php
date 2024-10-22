@@ -6,6 +6,7 @@ use App\Core\Model;
 use App\Core\Traits\Relationships;
 use App\Core\Database;
 use App\Core\Validation;
+use App\Models\ExamSetRepository;
 
 /**
  * ExamSet model represents the `examset` table in the database.
@@ -77,17 +78,20 @@ class ExamSet extends Model
             return null;
         }
 
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM examset WHERE slug = :slug LIMIT 1";
-        $data = $db->fetch($sql, ['slug' => $slug]);
+        $repository = new ExamSetRepository(Database::getInstance());
+        return $repository->findBy('slug', $slug);
+    }
 
-        if ($data) {
-            $examSet = new self();
-            $examSet->setAttributes($data);
-            return $examSet;
-        }
-
-        return null;
+    /**
+     * Finds an exam set by its ID.
+     *
+     * @param int $id The ID of the exam set.
+     * @return ExamSet|null The found exam set instance or null if not found.
+     */
+    public static function find(int $id): ?ExamSet
+    {
+        $repository = new ExamSetRepository(Database::getInstance());
+        return $repository->find($id);
     }
 
     /**
@@ -103,17 +107,7 @@ class ExamSet extends Model
             throw new \InvalidArgumentException("Invalid column: $column");
         }
 
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM examset WHERE {$column} = :value";
-        $rows = $db->fetchAll($sql, ['value' => $value]);
-
-        $examSets = [];
-        foreach ($rows as $row) {
-            $examSet = new self();
-            $examSet->setAttributes($row);
-            $examSets[] = $examSet;
-        }
-
-        return $examSets;
+        $repository = new ExamSetRepository(Database::getInstance());
+        return $repository->findAllBy($column, $value);
     }
 }
