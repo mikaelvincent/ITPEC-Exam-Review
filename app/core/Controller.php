@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Core\BreadcrumbGenerator;
+
 /**
  * Base Controller class providing common functionalities for all controllers.
  */
@@ -36,19 +38,33 @@ class Controller
     protected Router $router;
 
     /**
+     * The breadcrumb generator instance.
+     *
+     * @var BreadcrumbGenerator
+     */
+    protected BreadcrumbGenerator $breadcrumbGenerator;
+
+    /**
      * Controller constructor.
      *
      * @param Request $request
      * @param Response $response
      * @param Session $session
      * @param Router $router
+     * @param BreadcrumbGenerator $breadcrumbGenerator
      */
-    public function __construct(Request $request, Response $response, Session $session, Router $router)
-    {
+    public function __construct(
+        Request $request,
+        Response $response,
+        Session $session,
+        Router $router,
+        BreadcrumbGenerator $breadcrumbGenerator
+    ) {
         $this->request = $request;
         $this->response = $response;
         $this->session = $session;
         $this->router = $router;
+        $this->breadcrumbGenerator = $breadcrumbGenerator;
     }
 
     /**
@@ -60,7 +76,9 @@ class Controller
      */
     public function render(string $view, array $params = []): string
     {
-        $params["breadcrumbs"] = $this->getBreadcrumbs();
+        $pathSegments = explode('/', trim($this->request->getUri(), '/'));
+        $breadcrumbs = $this->breadcrumbGenerator->generate($pathSegments, $this->request->getBasePath());
+        $params["breadcrumbs"] = $breadcrumbs;
         return $this->router->renderView($view, $params);
     }
 
@@ -72,8 +90,10 @@ class Controller
      */
     protected function renderError(string $message): string
     {
+        $breadcrumbs = $this->breadcrumbGenerator->generate(['error']);
         return $this->render("_error", [
             "message" => $message,
+            "breadcrumbs" => $breadcrumbs,
         ]);
     }
 
@@ -85,16 +105,6 @@ class Controller
     protected function getCurrentUserId(): int
     {
         return $this->session->get("user_id") ?? 0;
-    }
-
-    /**
-     * Retrieves breadcrumb navigation data.
-     *
-     * @return array Breadcrumbs for the current page.
-     */
-    protected function getBreadcrumbs(): array
-    {
-        return $this->router->getBreadcrumbs();
     }
 
     /**
