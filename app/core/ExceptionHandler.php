@@ -21,7 +21,7 @@ class ExceptionHandler
     }
 
     /**
-     * Handles uncaught exceptions by logging and displaying an error page.
+     * Handles uncaught exceptions by logging and displaying a generic error page.
      *
      * @param Throwable $exception The exception that was thrown.
      * @return void
@@ -45,10 +45,7 @@ class ExceptionHandler
             ],
         ];
 
-        $message = 'An unexpected error has occurred.';
-        if ($_ENV['APP_DEBUG'] ?? false) {
-            $message = $exception->getMessage();
-        }
+        $message = 'An unexpected error has occurred. Please try again later.';
 
         echo Application::$app !== null
             ? Application::$app->router->renderView('_error', [
@@ -61,7 +58,7 @@ class ExceptionHandler
     }
 
     /**
-     * Handles PHP errors by converting them to exceptions.
+     * Handles PHP errors by converting them to exceptions without exposing details.
      *
      * @param int $errno The level of the error raised.
      * @param string $errstr The error message.
@@ -76,7 +73,7 @@ class ExceptionHandler
         string $errfile,
         int $errline
     ): bool {
-        $exception = new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+        $exception = new \ErrorException('An internal error occurred.', 0, $errno, $errfile, $errline);
         self::logException($exception);
         throw $exception;
     }
