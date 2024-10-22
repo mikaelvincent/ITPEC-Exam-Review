@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Validation;
 
 /**
  * Exam model represents the `exam` table in the database.
@@ -18,6 +19,26 @@ class Exam extends Model
      * @var string
      */
     protected string $table = "exam";
+
+    /**
+     * Validates the Exam model's attributes.
+     *
+     * @return array Validation errors, empty if none.
+     */
+    public function validate(): array
+    {
+        $errors = [];
+
+        if (empty($this->name)) {
+            $errors[] = "Name is required.";
+        }
+
+        if (empty($this->slug) || !Validation::validateSlug($this->slug)) {
+            $errors[] = "Invalid slug.";
+        }
+
+        return $errors;
+    }
 
     /**
      * Gets the exam sets associated with the exam.

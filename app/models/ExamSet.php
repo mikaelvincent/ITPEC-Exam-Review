@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Validation;
 
 /**
  * ExamSet model represents the `examset` table in the database.
@@ -18,6 +19,30 @@ class ExamSet extends Model
      * @var string
      */
     protected string $table = "examset";
+
+    /**
+     * Validates the ExamSet model's attributes.
+     *
+     * @return array Validation errors, empty if none.
+     */
+    public function validate(): array
+    {
+        $errors = [];
+
+        if (empty($this->exam_id) || !Validation::validateInteger($this->exam_id)) {
+            $errors[] = "Invalid exam ID.";
+        }
+
+        if (empty($this->name)) {
+            $errors[] = "Name is required.";
+        }
+
+        if (empty($this->slug) || !Validation::validateSlug($this->slug)) {
+            $errors[] = "Invalid slug.";
+        }
+
+        return $errors;
+    }
 
     /**
      * Gets the exam associated with the exam set.

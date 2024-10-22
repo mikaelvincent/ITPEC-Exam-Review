@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Model;
 use App\Core\Traits\Relationships;
 use App\Core\Database;
+use App\Core\Validation;
 
 /**
  * Question model represents the `question` table in the database.
@@ -19,6 +20,26 @@ class Question extends Model
      * @var string
      */
     protected string $table = "question";
+
+    /**
+     * Validates the Question model's attributes.
+     *
+     * @return array Validation errors, empty if none.
+     */
+    public function validate(): array
+    {
+        $errors = [];
+
+        if (empty($this->exam_set_id) || !Validation::validateInteger($this->exam_set_id)) {
+            $errors[] = "Invalid exam set ID.";
+        }
+
+        if (empty($this->question_number) || !Validation::validateInteger($this->question_number)) {
+            $errors[] = "Invalid question number.";
+        }
+
+        return $errors;
+    }
 
     /**
      * Gets the exam set associated with the question.

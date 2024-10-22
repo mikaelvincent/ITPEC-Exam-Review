@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Model;
 use App\Core\Traits\Relationships;
+use App\Core\Validation;
 
 /**
  * Answer model represents the `answer` table in the database.
@@ -18,6 +19,32 @@ class Answer extends Model
      * @var string
      */
     protected string $table = "answer";
+
+    /**
+     * Validates the Answer model's attributes.
+     *
+     * @return array Validation errors, empty if none.
+     */
+    public function validate(): array
+    {
+        $errors = [];
+
+        if (empty($this->question_id) || !Validation::validateInteger($this->question_id)) {
+            $errors[] = "Invalid question ID.";
+        }
+
+        if (empty($this->label)) {
+            $errors[] = "Label is required.";
+        }
+
+        if (!isset($this->is_correct)) {
+            $errors[] = "Is_correct field is required.";
+        } elseif (!is_bool($this->is_correct)) {
+            $errors[] = "Is_correct must be a boolean value.";
+        }
+
+        return $errors;
+    }
 
     /**
      * Retrieves the question associated with the answer.
