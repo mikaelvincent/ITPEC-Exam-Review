@@ -4,15 +4,45 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserProgress;
+use App\Models\UserProgressRepository;
 use App\Models\Exam;
 use App\Models\ExamSet;
 use App\Models\Question;
+use App\Core\Router;
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Session;
+use App\Core\BreadcrumbGenerator;
+use App\Core\Database;
+use App\Core\Logger;
+use App\Core\Application;
 
 /**
  * Handles operations related to exams, exam sets, questions, and explanations.
  */
 class ExamController extends Controller
 {
+    /**
+     * @var UserProgressRepository
+     */
+    protected UserProgressRepository $userProgressRepository;
+
+    /**
+     * ExamController constructor.
+     *
+     * Initializes the UserProgressRepository.
+     */
+    public function __construct(
+        Request $request,
+        Response $response,
+        Session $session,
+        Router $router,
+        BreadcrumbGenerator $breadcrumbGenerator
+    ) {
+        parent::__construct($request, $response, $session, $router, $breadcrumbGenerator);
+        $this->userProgressRepository = new UserProgressRepository(Database::getInstance());
+    }
+
     /**
      * Retrieves an exam by slug.
      *
@@ -101,7 +131,7 @@ class ExamController extends Controller
     }
 
     /**
-     * Displays the page for a specific question within an exam set.
+     * Displays or processes the page for a specific question within an exam set.
      *
      * @param array $params Route parameters including 'examset_slug' and 'question_number'.
      * @return string Rendered view content.
@@ -110,6 +140,11 @@ class ExamController extends Controller
     {
         $examSetSlug = $params["examset_slug"] ?? "unknown-exam-set";
         $questionNumber = $params["question_number"] ?? "unknown-question";
+
+        // Handle POST request for answer submission
+        if ($this->request->getMethod() === 'POST') {
+            return $this->handleAnswerSubmission($examSetSlug, $questionNumber);
+        }
 
         $question = Question::findByValidatedExamSetSlugAndNumber(
             $examSetSlug,
@@ -143,5 +178,129 @@ class ExamController extends Controller
             "totalQuestions" => $totalQuestions,
             "nextQuestionUrl" => $nextQuestionUrl,
         ]);
+    }
+
+    /**
+     * Handles the submission of an answer for a specific question.
+     *
+     * @param string $examSetSlug Slug of the exam set.
+     * @param string $questionNumber Number of the question.
+     * @return string Rendered view content after processing.
+     */
+    protected function handleAnswerSubmission(string $examSetSlug, string $questionNumber): string
+    {
+        // Log the initiation of answer submission handling
+        Application::$app->logger->info("Handling answer submission.", [
+            'examSetSlug' => $examSetSlug,
+            'questionNumber' => $questionNumber,
+            'userId' => $this->getCurrentUserId(),
+        ]);
+
+        // Sanitize inputs
+        $examSetSlug = htmlspecialchars($examSetSlug);
+        $questionNumber = (int) $questionNumber;
+
+        try {
+            // Retrieve the question
+            $question = Question::findByValidatedExamSetSlugAndNumber(
+                $examSetSlug,
+                $questionNumber
+            );
+
+            if (!$question) {
+                Application::$app->logger->warning("Question not found during answer submission.", [
+                    'examSetSlug' => $examSetSlug,
+                    'questionNumber' => $questionNumber,
+                ]);
+                return $this->renderError("Question not found.");
+            }
+
+            // Fetch all answers and log available answer IDs
+            $answers = $question->getAnswers();
+            $availableAnswerIds = array_map(fn($answer) => $answer->id, $answers);
+            Application::$app->logger->info("Available answer IDs for question.", [
+                'availableAnswerIds' => $availableAnswerIds  // Log actual available answer IDs
+            ]);
+
+            // Retrieve the selected answer ID from POST data
+            $selectedAnswerId = (int) ($this->request->getPost('selected_answer_id') ?? 0);
+            Application::$app->logger->info("Selected answer ID retrieved.", [
+                'selectedAnswerId' => $selectedAnswerId  // Log the selected answer ID
+            ]);
+
+            // Validate the selected answer
+            $selectedAnswer = null;
+            foreach ($answers as $answer) {
+                if ($answer->id === $selectedAnswerId) {
+                    $selectedAnswer = $answer;
+                    break;
+                }
+            }
+
+            if (!$selectedAnswer) {
+                Application::$app->logger->warning("Invalid answer selection.", [
+                    'selectedAnswerId' => $selectedAnswerId,  // Include selected answer ID
+                    'availableAnswerIds' => $availableAnswerIds  // Include available answer IDs
+                ]);
+                return $this->renderError("Invalid answer selection.", 400);
+            }            
+
+            // Check if the user has already answered
+            $existingProgress = UserProgress::getProgressForQuestion(
+                $this->getCurrentUserId(),
+                $question->getExamSet()->getExam()->slug,
+                $examSetSlug,
+                $questionNumber
+            );
+
+            if (!empty($existingProgress)) {
+                Application::$app->logger->info("User has already answered this question.", [
+                    'userId' => $this->getCurrentUserId(),
+                    'questionId' => $question->id,
+                ]);
+                return $this->renderError("You have already answered this question.");
+            }
+
+            // Create a new UserProgress record
+            $userProgress = new UserProgress();
+            $userProgress->user_id = $this->getCurrentUserId();
+            $userProgress->selected_answer_id = $selectedAnswerId;
+            $userProgress->is_active = true;
+
+            // Validate the UserProgress model
+            $validationErrors = $userProgress->validate();
+            if (!empty($validationErrors)) {
+                Application::$app->logger->warning("UserProgress validation failed.", [
+                    'errors' => $validationErrors,
+                    'userProgress' => $userProgress->getAttributes(),
+                ]);
+                return $this->renderError(implode(" ", $validationErrors));
+            }
+
+            // Save the UserProgress using the repository
+            if ($this->userProgressRepository->insertUserProgress($userProgress)) {
+                Application::$app->logger->info("UserProgress inserted successfully.", [
+                    'userId' => $userProgress->user_id,
+                    'selectedAnswerId' => $userProgress->selected_answer_id,
+                ]);
+                // Redirect to the same question page to reflect the submitted answer
+                $this->response->redirect($this->request->getUri());
+                return '';
+            } else {
+                Application::$app->logger->error("Failed to insert UserProgress.", [
+                    'userId' => $userProgress->user_id,
+                    'selectedAnswerId' => $userProgress->selected_answer_id,
+                ]);
+                return $this->renderError("Failed to submit your answer. Please try again.");
+            }
+        } catch (\Exception $e) {
+            // Log the exception details
+            Application::$app->logger->error("Exception occurred during answer submission.", [
+                'message' => $e->getMessage(),
+                'stackTrace' => $e->getTraceAsString(),
+            ]);
+            // Rethrow the exception to be handled by the global exception handler
+            throw $e;
+        }
     }
 }

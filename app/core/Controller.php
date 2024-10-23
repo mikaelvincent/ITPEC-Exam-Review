@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Core\BreadcrumbGenerator;
+use App\Core\ErrorHelper;
 
 /**
  * Base Controller class providing common functionalities for all controllers.
@@ -47,6 +48,8 @@ class Controller
     /**
      * Controller constructor.
      *
+     * Initializes the controller with core components.
+     *
      * @param Request $request
      * @param Response $response
      * @param Session $session
@@ -80,21 +83,26 @@ class Controller
         $breadcrumbs = $this->breadcrumbGenerator->generate($pathSegments, $this->request->getBasePath());
         $params["breadcrumbs"] = $breadcrumbs;
         $params["basePath"] = $this->request->getBasePath();
+        $params["request"] = $this->request;
         return $this->router->renderView($view, $params);
     }
 
     /**
-     * Renders an error view with the given message.
+     * Renders an error view with the given message and code.
      *
      * @param string $message Error message to display.
+     * @param int $code HTTP status code for the error.
      * @return string Rendered error view content.
      */
-    protected function renderError(string $message): string
+    protected function renderError(string $message, int $code = 500): string
     {
         $breadcrumbs = $this->breadcrumbGenerator->generate(['error']);
+        $errorTitle = ErrorHelper::getErrorTitle($code);
         return $this->render("_error", [
             "message" => $message,
             "breadcrumbs" => $breadcrumbs,
+            "errorTitle" => $errorTitle,
+            "code" => $code,
         ]);
     }
 
@@ -114,6 +122,7 @@ class Controller
      * @param string $modelClass The model class name.
      * @param string $slug The slug to search for.
      * @return Model|null The model instance or null if not found.
+     * @throws \Exception If the model class does not implement the required method.
      */
     protected function getModelBySlug(string $modelClass, string $slug): ?Model
     {

@@ -115,6 +115,7 @@ class Application
         $this->router->get('/{slug}/congratulations', 'ExamController@congratulations');
         $this->router->get('/{slug}/{examset_slug}', 'ExamController@examSet');
         $this->router->get('/{slug}/{examset_slug}/Q{question_number}', 'ExamController@question');
+        $this->router->addRoute('POST', '/{slug}/{examset_slug}/Q{question_number}', 'ExamController@question');
     }
 
     /**
