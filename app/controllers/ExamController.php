@@ -190,7 +190,7 @@ class ExamController extends Controller
     protected function handleAnswerSubmission(string $examSetSlug, string $questionNumber): string
     {
         // Log the initiation of answer submission handling
-        Application::$app->logger->info("Handling answer submission.", [  // <-- Fixed reference
+        Application::$app->logger->info("Handling answer submission.", [
             'examSetSlug' => $examSetSlug,
             'questionNumber' => $questionNumber,
             'userId' => $this->getCurrentUserId(),
@@ -215,15 +215,22 @@ class ExamController extends Controller
                 return $this->renderError("Question not found.");
             }
 
+            // Fetch all answers and log available answer IDs
+            $answers = $question->getAnswers();
+            $availableAnswerIds = array_map(fn($answer) => $answer->id, $answers);
+            Application::$app->logger->info("Available answer IDs for question.", [
+                'availableAnswerIds' => $availableAnswerIds  // Log actual available answer IDs
+            ]);
+
             // Retrieve the selected answer ID from POST data
             $selectedAnswerId = (int) ($this->request->getPost('selected_answer_id') ?? 0);
             Application::$app->logger->info("Selected answer ID retrieved.", [
-                'selectedAnswerId' => $selectedAnswerId,
+                'selectedAnswerId' => $selectedAnswerId  // Log the selected answer ID
             ]);
 
             // Validate the selected answer
             $selectedAnswer = null;
-            foreach ($question->getAnswers() as $answer) {
+            foreach ($answers as $answer) {
                 if ($answer->id === $selectedAnswerId) {
                     $selectedAnswer = $answer;
                     break;
@@ -232,8 +239,8 @@ class ExamController extends Controller
 
             if (!$selectedAnswer) {
                 Application::$app->logger->warning("Invalid answer selection.", [
-                    'selectedAnswerId' => $selectedAnswerId,
-                    'questionId' => $question->id,
+                    'selectedAnswerId' => $selectedAnswerId,  // Include selected answer ID
+                    'availableAnswerIds' => $availableAnswerIds  // Include available answer IDs
                 ]);
                 return $this->renderError("Invalid answer selection.", 400);
             }            
