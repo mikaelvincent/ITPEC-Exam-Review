@@ -15,6 +15,7 @@ use App\Core\Session;
 use App\Core\BreadcrumbGenerator;
 use App\Core\Database;
 use App\Core\Logger;
+use App\Core\Application;
 
 /**
  * Handles operations related to exams, exam sets, questions, and explanations.
@@ -189,7 +190,7 @@ class ExamController extends Controller
     protected function handleAnswerSubmission(string $examSetSlug, string $questionNumber): string
     {
         // Log the initiation of answer submission handling
-        Application::$app->logger->info("Handling answer submission.", [
+        Application::$app->logger->info("Handling answer submission.", [  // <-- Fixed reference
             'examSetSlug' => $examSetSlug,
             'questionNumber' => $questionNumber,
             'userId' => $this->getCurrentUserId(),
