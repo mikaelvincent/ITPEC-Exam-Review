@@ -235,8 +235,8 @@ class ExamController extends Controller
                     'selectedAnswerId' => $selectedAnswerId,
                     'questionId' => $question->id,
                 ]);
-                return $this->renderError("Invalid answer selection.");
-            }
+                return $this->renderError("Invalid answer selection.", 400);
+            }            
 
             // Check if the user has already answered
             $existingProgress = UserProgress::getProgressForQuestion(
