@@ -47,6 +47,8 @@ class Controller
     /**
      * Controller constructor.
      *
+     * Initializes the controller with core components.
+     *
      * @param Request $request
      * @param Response $response
      * @param Session $session
@@ -80,6 +82,7 @@ class Controller
         $breadcrumbs = $this->breadcrumbGenerator->generate($pathSegments, $this->request->getBasePath());
         $params["breadcrumbs"] = $breadcrumbs;
         $params["basePath"] = $this->request->getBasePath();
+        $params["request"] = $this->request;
         return $this->router->renderView($view, $params);
     }
 
@@ -114,6 +117,7 @@ class Controller
      * @param string $modelClass The model class name.
      * @param string $slug The slug to search for.
      * @return Model|null The model instance or null if not found.
+     * @throws \Exception If the model class does not implement the required method.
      */
     protected function getModelBySlug(string $modelClass, string $slug): ?Model
     {
