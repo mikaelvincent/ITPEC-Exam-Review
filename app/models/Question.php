@@ -6,6 +6,7 @@ use App\Core\Model;
 use App\Core\Traits\Relationships;
 use App\Core\Database;
 use App\Core\Validation;
+use App\Models\AnswerRepository;
 
 /**
  * Question model represents the `question` table in the database.
@@ -58,7 +59,8 @@ class Question extends Model
      */
     public function getAnswers(): array
     {
-        return Answer::findAllBy("question_id", $this->id);
+        $repository = new AnswerRepository(Database::getInstance());
+        return $repository->findAllBy("question_id", $this->id);
     }
 
     /**

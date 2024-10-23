@@ -79,6 +79,7 @@ class Controller
         $pathSegments = explode('/', trim($this->request->getUri(), '/'));
         $breadcrumbs = $this->breadcrumbGenerator->generate($pathSegments, $this->request->getBasePath());
         $params["breadcrumbs"] = $breadcrumbs;
+        $params["basePath"] = $this->request->getBasePath();
         return $this->router->renderView($view, $params);
     }
 

@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserProgress;
-use App\Models\Explanation;
 use App\Models\Exam;
 use App\Models\ExamSet;
 use App\Models\Question;
@@ -127,12 +126,22 @@ class ExamController extends Controller
             $questionNumber
         );
 
-        $explanations = Explanation::getExplanationsForQuestion($question->id);
+        // Determine the current question index and total questions for navigation
+        $examSet = $question->getExamSet();
+        $allQuestions = $examSet->getQuestions();
+        $totalQuestions = count($allQuestions);
+        $currentQuestionIndex = array_search($question, $allQuestions, true) + 1;
+        $nextQuestion = $allQuestions[$currentQuestionIndex] ?? null;
+        $nextQuestionUrl = $nextQuestion
+            ? "/{$examSet->getExam()->slug}/{$examSet->slug}/Q{$nextQuestion->question_number}"
+            : "/{$examSet->getExam()->slug}/congratulations";
 
         return $this->render("exam/question", [
             "question" => $question,
             "user_progress" => $userProgress,
-            "explanations" => $explanations,
+            "currentQuestionIndex" => $currentQuestionIndex,
+            "totalQuestions" => $totalQuestions,
+            "nextQuestionUrl" => $nextQuestionUrl,
         ]);
     }
 }
