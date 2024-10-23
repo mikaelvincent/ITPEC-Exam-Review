@@ -111,4 +111,28 @@ class Request
             json_encode($this->getQueryParams())
         );
     }
+
+    /**
+     * Retrieves a sanitized POST parameter by key.
+     *
+     * @param string $key The key of the POST parameter.
+     * @param mixed $default The default value to return if the key does not exist.
+     * @return mixed The sanitized POST parameter or default value.
+     */
+    public function getPost(string $key, $default = null)
+    {
+        return isset($_POST[$key]) ? Validation::sanitize($_POST[$key]) : $default;
+    }
+
+    /**
+     * Retrieves a sanitized GET parameter by key.
+     *
+     * @param string $key The key of the GET parameter.
+     * @param mixed $default The default value to return if the key does not exist.
+     * @return mixed The sanitized GET parameter or default value.
+     */
+    public function getGet(string $key, $default = null)
+    {
+        return isset($_GET[$key]) ? Validation::sanitize($_GET[$key]) : $default;
+    }
 }
