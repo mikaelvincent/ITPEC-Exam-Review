@@ -17,7 +17,7 @@ $isAnswered = isset($user_progress['selected_answer_id']);
         </div>
     </div>
     <div class="col-12 col-lg-4">
-        <form method="POST" action="<?= htmlspecialchars($request->getUri()) ?>">
+        <form method="POST" action="<?= $basePath . htmlspecialchars($request->getUri()) ?>">
             <div class="row gy-3 row-cols-2 row-cols-xl-1 mb-5">
                 <?php foreach ($question->getAnswers() as $answer): ?>
                     <?php
