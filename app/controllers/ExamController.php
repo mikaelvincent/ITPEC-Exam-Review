@@ -7,6 +7,10 @@ use App\Models\UserProgress;
 use App\Models\Exam;
 use App\Models\ExamSet;
 use App\Models\Question;
+use App\Core\Router;
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Session;
 
 /**
  * Handles operations related to exams, exam sets, questions, and explanations.
@@ -101,7 +105,7 @@ class ExamController extends Controller
     }
 
     /**
-     * Displays the page for a specific question within an exam set.
+     * Displays or processes the page for a specific question within an exam set.
      *
      * @param array $params Route parameters including 'examset_slug' and 'question_number'.
      * @return string Rendered view content.
@@ -110,6 +114,11 @@ class ExamController extends Controller
     {
         $examSetSlug = $params["examset_slug"] ?? "unknown-exam-set";
         $questionNumber = $params["question_number"] ?? "unknown-question";
+
+        // Handle POST request for answer submission
+        if ($this->request->getMethod() === 'POST') {
+            return $this->handleAnswerSubmission($examSetSlug, $questionNumber);
+        }
 
         $question = Question::findByValidatedExamSetSlugAndNumber(
             $examSetSlug,
@@ -143,5 +152,78 @@ class ExamController extends Controller
             "totalQuestions" => $totalQuestions,
             "nextQuestionUrl" => $nextQuestionUrl,
         ]);
+    }
+
+    /**
+     * Handles the submission of an answer for a specific question.
+     *
+     * @param string $examSetSlug Slug of the exam set.
+     * @param string $questionNumber Number of the question.
+     * @return string Rendered view content after processing.
+     */
+    protected function handleAnswerSubmission(string $examSetSlug, string $questionNumber): string
+    {
+        $examSetSlug = htmlspecialchars($examSetSlug);
+        $questionNumber = (int) $questionNumber;
+
+        // Retrieve the question
+        $question = Question::findByValidatedExamSetSlugAndNumber(
+            $examSetSlug,
+            $questionNumber
+        );
+
+        if (!$question) {
+            return $this->renderError("Question not found.");
+        }
+
+        // Retrieve the selected answer ID from POST data
+        $selectedAnswerId = (int) ($this->request->getPost('selected_answer_id') ?? 0);
+
+        // Validate the selected answer
+        $selectedAnswer = null;
+        foreach ($question->getAnswers() as $answer) {
+            if ($answer->id === $selectedAnswerId) {
+                $selectedAnswer = $answer;
+                break;
+            }
+        }
+
+        if (!$selectedAnswer) {
+            return $this->renderError("Invalid answer selection.");
+        }
+
+        // Check if the user has already answered
+        $existingProgress = UserProgress::getProgressForQuestion(
+            $this->getCurrentUserId(),
+            $question->getExamSet()->getExam()->slug,
+            $examSetSlug,
+            $questionNumber
+        );
+
+        if (!empty($existingProgress)) {
+            return $this->renderError("You have already answered this question.");
+        }
+
+        // Create a new UserProgress record
+        $userProgress = new UserProgress();
+        $userProgress->user_id = $this->getCurrentUserId();
+        $userProgress->selected_answer_id = $selectedAnswerId;
+        $userProgress->is_active = true;
+
+        // Validate the UserProgress model
+        $validationErrors = $userProgress->validate();
+        if (!empty($validationErrors)) {
+            return $this->renderError(implode(" ", $validationErrors));
+        }
+
+        // Save the UserProgress
+        if ($userProgress->save()) {
+            // Redirect to the same question page to reflect the submitted answer
+            $response = new Response();
+            $response->redirect($this->request->getUri());
+            return '';
+        } else {
+            return $this->renderError("Failed to submit your answer. Please try again.");
+        }
     }
 }
