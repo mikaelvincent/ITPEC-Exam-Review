@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserProgress;
+use App\Models\UserProgressRepository;
 use App\Models\Exam;
 use App\Models\ExamSet;
 use App\Models\Question;
@@ -11,12 +12,35 @@ use App\Core\Router;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
+use App\Core\BreadcrumbGenerator;
+use App\Core\Database;
 
 /**
  * Handles operations related to exams, exam sets, questions, and explanations.
  */
 class ExamController extends Controller
 {
+    /**
+     * @var UserProgressRepository
+     */
+    protected UserProgressRepository $userProgressRepository;
+
+    /**
+     * ExamController constructor.
+     *
+     * Initializes the UserProgressRepository.
+     */
+    public function __construct(
+        Request $request,
+        Response $response,
+        Session $session,
+        Router $router,
+        BreadcrumbGenerator $breadcrumbGenerator
+    ) {
+        parent::__construct($request, $response, $session, $router, $breadcrumbGenerator);
+        $this->userProgressRepository = new UserProgressRepository(Database::getInstance());
+    }
+
     /**
      * Retrieves an exam by slug.
      *
@@ -216,11 +240,10 @@ class ExamController extends Controller
             return $this->renderError(implode(" ", $validationErrors));
         }
 
-        // Save the UserProgress
-        if ($userProgress->save()) {
+        // Save the UserProgress using the repository
+        if ($this->userProgressRepository->insertUserProgress($userProgress)) {
             // Redirect to the same question page to reflect the submitted answer
-            $response = new Response();
-            $response->redirect($this->request->getUri());
+            $this->response->redirect($this->request->getUri());
             return '';
         } else {
             return $this->renderError("Failed to submit your answer. Please try again.");
