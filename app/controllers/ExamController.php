@@ -14,6 +14,7 @@ use App\Core\Response;
 use App\Core\Session;
 use App\Core\BreadcrumbGenerator;
 use App\Core\Database;
+use App\Core\Logger;
 
 /**
  * Handles operations related to exams, exam sets, questions, and explanations.
@@ -187,66 +188,111 @@ class ExamController extends Controller
      */
     protected function handleAnswerSubmission(string $examSetSlug, string $questionNumber): string
     {
+        // Log the initiation of answer submission handling
+        Application::$app->logger->info("Handling answer submission.", [
+            'examSetSlug' => $examSetSlug,
+            'questionNumber' => $questionNumber,
+            'userId' => $this->getCurrentUserId(),
+        ]);
+
+        // Sanitize inputs
         $examSetSlug = htmlspecialchars($examSetSlug);
         $questionNumber = (int) $questionNumber;
 
-        // Retrieve the question
-        $question = Question::findByValidatedExamSetSlugAndNumber(
-            $examSetSlug,
-            $questionNumber
-        );
+        try {
+            // Retrieve the question
+            $question = Question::findByValidatedExamSetSlugAndNumber(
+                $examSetSlug,
+                $questionNumber
+            );
 
-        if (!$question) {
-            return $this->renderError("Question not found.");
-        }
-
-        // Retrieve the selected answer ID from POST data
-        $selectedAnswerId = (int) ($this->request->getPost('selected_answer_id') ?? 0);
-
-        // Validate the selected answer
-        $selectedAnswer = null;
-        foreach ($question->getAnswers() as $answer) {
-            if ($answer->id === $selectedAnswerId) {
-                $selectedAnswer = $answer;
-                break;
+            if (!$question) {
+                Application::$app->logger->warning("Question not found during answer submission.", [
+                    'examSetSlug' => $examSetSlug,
+                    'questionNumber' => $questionNumber,
+                ]);
+                return $this->renderError("Question not found.");
             }
-        }
 
-        if (!$selectedAnswer) {
-            return $this->renderError("Invalid answer selection.");
-        }
+            // Retrieve the selected answer ID from POST data
+            $selectedAnswerId = (int) ($this->request->getPost('selected_answer_id') ?? 0);
+            Application::$app->logger->info("Selected answer ID retrieved.", [
+                'selectedAnswerId' => $selectedAnswerId,
+            ]);
 
-        // Check if the user has already answered
-        $existingProgress = UserProgress::getProgressForQuestion(
-            $this->getCurrentUserId(),
-            $question->getExamSet()->getExam()->slug,
-            $examSetSlug,
-            $questionNumber
-        );
+            // Validate the selected answer
+            $selectedAnswer = null;
+            foreach ($question->getAnswers() as $answer) {
+                if ($answer->id === $selectedAnswerId) {
+                    $selectedAnswer = $answer;
+                    break;
+                }
+            }
 
-        if (!empty($existingProgress)) {
-            return $this->renderError("You have already answered this question.");
-        }
+            if (!$selectedAnswer) {
+                Application::$app->logger->warning("Invalid answer selection.", [
+                    'selectedAnswerId' => $selectedAnswerId,
+                    'questionId' => $question->id,
+                ]);
+                return $this->renderError("Invalid answer selection.");
+            }
 
-        // Create a new UserProgress record
-        $userProgress = new UserProgress();
-        $userProgress->user_id = $this->getCurrentUserId();
-        $userProgress->selected_answer_id = $selectedAnswerId;
-        $userProgress->is_active = true;
+            // Check if the user has already answered
+            $existingProgress = UserProgress::getProgressForQuestion(
+                $this->getCurrentUserId(),
+                $question->getExamSet()->getExam()->slug,
+                $examSetSlug,
+                $questionNumber
+            );
 
-        // Validate the UserProgress model
-        $validationErrors = $userProgress->validate();
-        if (!empty($validationErrors)) {
-            return $this->renderError(implode(" ", $validationErrors));
-        }
+            if (!empty($existingProgress)) {
+                Application::$app->logger->info("User has already answered this question.", [
+                    'userId' => $this->getCurrentUserId(),
+                    'questionId' => $question->id,
+                ]);
+                return $this->renderError("You have already answered this question.");
+            }
 
-        // Save the UserProgress using the repository
-        if ($this->userProgressRepository->insertUserProgress($userProgress)) {
-            // Redirect to the same question page to reflect the submitted answer
-            $this->response->redirect($this->request->getUri());
-            return '';
-        } else {
-            return $this->renderError("Failed to submit your answer. Please try again.");
+            // Create a new UserProgress record
+            $userProgress = new UserProgress();
+            $userProgress->user_id = $this->getCurrentUserId();
+            $userProgress->selected_answer_id = $selectedAnswerId;
+            $userProgress->is_active = true;
+
+            // Validate the UserProgress model
+            $validationErrors = $userProgress->validate();
+            if (!empty($validationErrors)) {
+                Application::$app->logger->warning("UserProgress validation failed.", [
+                    'errors' => $validationErrors,
+                    'userProgress' => $userProgress->getAttributes(),
+                ]);
+                return $this->renderError(implode(" ", $validationErrors));
+            }
+
+            // Save the UserProgress using the repository
+            if ($this->userProgressRepository->insertUserProgress($userProgress)) {
+                Application::$app->logger->info("UserProgress inserted successfully.", [
+                    'userId' => $userProgress->user_id,
+                    'selectedAnswerId' => $userProgress->selected_answer_id,
+                ]);
+                // Redirect to the same question page to reflect the submitted answer
+                $this->response->redirect($this->request->getUri());
+                return '';
+            } else {
+                Application::$app->logger->error("Failed to insert UserProgress.", [
+                    'userId' => $userProgress->user_id,
+                    'selectedAnswerId' => $userProgress->selected_answer_id,
+                ]);
+                return $this->renderError("Failed to submit your answer. Please try again.");
+            }
+        } catch (\Exception $e) {
+            // Log the exception details
+            Application::$app->logger->error("Exception occurred during answer submission.", [
+                'message' => $e->getMessage(),
+                'stackTrace' => $e->getTraceAsString(),
+            ]);
+            // Rethrow the exception to be handled by the global exception handler
+            throw $e;
         }
     }
 }
