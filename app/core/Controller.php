@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Core\BreadcrumbGenerator;
+use App\Core\ErrorHelper;
 
 /**
  * Base Controller class providing common functionalities for all controllers.
@@ -87,17 +88,21 @@ class Controller
     }
 
     /**
-     * Renders an error view with the given message.
+     * Renders an error view with the given message and code.
      *
      * @param string $message Error message to display.
+     * @param int $code HTTP status code for the error.
      * @return string Rendered error view content.
      */
-    protected function renderError(string $message): string
+    protected function renderError(string $message, int $code = 500): string
     {
         $breadcrumbs = $this->breadcrumbGenerator->generate(['error']);
+        $errorTitle = ErrorHelper::getErrorTitle($code);
         return $this->render("_error", [
             "message" => $message,
             "breadcrumbs" => $breadcrumbs,
+            "errorTitle" => $errorTitle,
+            "code" => $code,
         ]);
     }
 
