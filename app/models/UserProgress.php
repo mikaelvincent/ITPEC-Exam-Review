@@ -40,7 +40,7 @@ class UserProgress extends Model
         }
 
         if (!isset($this->is_active) || !is_bool($this->is_active)) {
-            $errors[] = "Is_active must be a boolean value.";
+            $errors[] = "is_active must be a boolean value.";
         }
 
         return $errors;
